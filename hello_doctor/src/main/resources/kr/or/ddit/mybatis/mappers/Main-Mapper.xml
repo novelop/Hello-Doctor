@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Main-Mapper">
+	<select id="mainIssueList" parameterType="str"
+		resultType="mainVO">
+		select a.iss_title, b.iss_yn , ac.pname as p_name, ac.mdate
+		as m_date
+		from issue a, issue_readyn b ,(select a.m_no, a.iss_no as ino, c.p_name as
+		pname, a.m_date as mdate
+		from medi_reco a, com_reco b, patient c
+		where a.m_no = b.m_no
+		and a.p_no = c.p_no
+		and b.com_no in (select a.com_no
+		from com_reco a, co_med b, co_doctor c
+		where a.co_no = b.co_no
+		and b.co_no =c.co_no
+		and c.d_id=#{dId}
+		and b.co_ing_status='1'
+		and c.paty_yn='Y')) ac
+		where a.iss_no=b.iss_no
+		and a.iss_no = ac.ino
+
+	</select>
+
+	<select id="mainComRecoList" parameterType="str"
+		resultType="mainVO">
+		select c.d_name, b.m_name, a.com_date,d.ma_name
+		from com_reco a, medi_reco b, doctor c, major d
+		where a.m_no= b.m_no
+		and c.d_id = b.d_id
+		and c.ma_no=d.ma_no
+		and a.com_no in ( select a.com_no
+		from com_reco a, co_med b, co_doctor c
+		where a.co_no = b.co_no
+		and b.co_no =c.co_no
+		and c.d_id=#{dId}
+		and b.co_ing_status='1'
+		and c.paty_yn='Y')
+		order by 3 desc
+
+	</select>
+	<!-- 내가 진료한 모든 환자들(협진의 경우에는 내가 주치의인 경우) -->
+	<select id="mainMyPaintStatus" resultType="mainVO">
+		<!-- select distinct g.iss_yn, e.p_name, e.p_rnum, d.m_date,d.m_no,d.m_name -->
+		<!-- from co_med a, co_doctor b, doctor c, medi_reco d , patient e, issue
+			f, issue_readyn g -->
+		<!-- where b.d_id = #{dId} -->
+		<!-- and a.co_no = b.co_no -->
+		<!-- and b.d_id = c.d_id -->
+		<!-- and c.d_id = d.d_id -->
+		<!-- and d.p_no = e.p_no -->
+		<!-- and f.iss_no = d.iss_no -->
+		<!-- and f.iss_no = g.iss_no -->
+		<!-- order by 4 desc -->
+
+		select * from (
+		select i.p_name, i.p_rnum, j.m_date, j.m_no, j.iss_no,f.iss_yn,f.d_id
+		from patient i, medi_reco j, issue_readyn f
+		where i.p_no = j.p_no
+		and f.iss_no(+) = j.iss_no
+		and j.m_date  >= (select sysdate-3  from dual)
+		and j.m_no in
+		(select h.m_no
+		from co_med g, com_reco h
+		where g.co_no = h.co_no
+		and g.co_doc = #{dId}
+		and g.co_ing_status='1'
+		))
+		where iss_no is null
+		or d_id = #{dId}
+		order by m_date desc
+	</select>
+
+	<!-- 내가 진료본 환자들 + 협진하고 있는 환자들 중에 내가 주치의가 아닌 환자들의 경우에도 포함 -->
+	<select id="mainAllPaintStatus" parameterType="str"
+		resultType="mainVO">
+
+		select distinct a.d_id ,d.iss_yn,b.p_no,b.p_name,b.p_rnum,
+		a.m_date,a.m_no,a.m_name
+		from medi_reco a,patient b, issue c, issue_readyn d
+		where
+		a.d_id in
+		(select distinct d_id
+		from co_doctor
+		where co_no in
+		(select co_no
+		from co_doctor
+		where d_id= #{dId}
+		and paty_yn = 'Y'))
+		and a.p_no = b.p_no
+		and a.iss_no = c.iss_no
+		and c.iss_no = d.iss_no
+		order by a.m_date DESC
+
+
+
+	</select>
+
+
+
+	<select id="mainMyPaintDetail" resultType="mainVO">
+		select symptom
+		from medi_reco
+		where m_no = #{mNo}
+	</select>
+
+
+	<select id="mainPaintIssue" resultType="mainVO">
+		select b.iss_title,
+		b.ISS_CONTENT
+		from medi_reco a, issue b
+		where a.iss_no = b.iss_no
+		and a.m_no = #{mNo}
+	</select>
+
+	<select id="mainPaienInfo" resultType="mainVO">
+		select b.p_name, b.p_rnum, a.m_date
+		from medi_reco a, patient b
+		where a.p_no = b.p_no
+		and a.m_no = #{mNo}
+	</select>
+
+	<select id="mainIssueYN" resultType="mainVO">
+		select c.iss_no,c.iss_yn
+		from medi_reco a, issue b, issue_readyn c
+		where a.iss_no = b.iss_no
+		and b.iss_no = c.iss_no
+		and a.m_no= #{mNo}
+		and c.d_id =#{dId}
+	</select>
+
+	<update id="issueYnChange">
+		update issue_readyn
+		set iss_yn= 'N'
+		where iss_no = #{issNo}
+		and d_id = #{dId}
+	</update>
+
+	<select id="myCodocMno" resultType="mainVO">
+
+
+      	select * from (
+		select i.p_name, i.p_rnum, j.m_date, j.m_no, j.iss_no,f.iss_yn,f.d_id
+		from patient i, medi_reco j, issue_readyn f
+		where i.p_no = j.p_no
+		and f.iss_no(+) = j.iss_no
+		and j.m_date  >= (select sysdate-3  from dual)
+		and j.m_no in
+		(select m_no
+		from com_reco a
+		where a.co_no in(
+		select a.co_no
+		from co_doctor a, co_med b
+		where a.co_no = b.co_no
+		and a.d_id= #{dId}
+		and a.paty_yn = 'Y'
+		and b.co_ing_status ='1'
+		)
+		))
+		where iss_no is null
+		or d_id = #{dId}
+		order by m_date desc
+	</select>
+
+	<!-- 자주찾는 협진리스트(즐겨찾기 주치의 이름 추가) -->
+	<select id="selectCoFreqNameAdd" resultType="coFreqVO"
+		parameterType="str">
+			select
+	a.co_no,a.d_id, TO_CHAR(a.cof_regdate,'YYYY-MM-DD') as cof_regdate,e.d_pic,
+	b.p_no,b.co_doc,b.co_disease,c.p_name, c.p_sex, c.p_rnum,e.d_name
+	from co_freq a, co_med b ,patient c, co_doctor d, doctor e
+	where  a.co_no = b.co_no
+	and b.p_no = c.p_no
+   	and b.co_no = d.co_no
+   	and e.d_id = d.d_id
+   	and b.co_ing_status = 1
+   	and d.paty_yn = 'Y'
+    and d.d_id=#{dId}
+	order by 3 desc
+	</select>
+
+
+</mapper>

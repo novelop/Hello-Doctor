@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyOrder-Mapper">
+
+	<select id="myorderList" resultType="myorderlistVO" >
+			select o_dname, mo_no, o_title
+			from my_order
+			where doc_id = #{dId}
+			and del_yn = 'N'
+	</select>
+
+	<select id="selectMyOrdersetSeqNext" resultType="string" >
+     	 select 'MO' || lpad(mos_seq.NEXTVAL,3,'0') as o_no FROM dual
+	</select>
+
+	<update id="insertMyOrderset" parameterType="ordersetCommand">
+		 INSERT INTO my_order (
+		        mo_no
+		       ,doc_id
+		       ,o_dname
+		       ,o_cla
+		       ,o_noti
+		       ,o_title
+		       ,o_target
+		       ,o_regdate
+		       ,o_caution
+		       ,o_result
+		       ,del_yn
+		    ) VALUES (
+     	        #{moNo}
+		       ,#{docId}
+		       ,#{oDname}
+		       ,#{oCla}
+		       ,#{oNoti}
+		       ,#{oTitle}
+		       ,#{oTarget}
+		       ,SYSDATE
+		       ,''
+		       ,''
+		       ,'N'
+		    )
+
+	</update>
+
+	<update id="insertMyDrugs" parameterType="ordersetVO">
+		INSERT INTO my_drug (
+		        o_drug
+		       ,mo_no
+		       ,quantity
+		       , dg_aday
+		       , dg_days
+		    ) VALUES (
+		        #{oDrug}
+		      , #{moNo}
+		      , #{quantity}
+		       ,#{dgAday}
+		      , #{dgDays}
+		    )
+
+    </update>
+
+    <select id="selectMyOrdersetDetail" parameterType="string" resultType="ordersetVO">
+			SELECT
+			    a.mo_no
+			  , b.d_name
+			  , a.doc_id
+			  , a.o_dname
+			  , a.o_cla
+			  , a.o_target
+			  , to_char(a.o_regdate,'YYYY-MM-DD')as o_regdate
+			  , a.o_caution
+			  , a.o_result
+			  , a.del_yn
+			  , a.o_title
+	          , a.o_noti
+			FROM
+			    my_order a
+			  , doctor   b
+			WHERE
+		        b.d_id = a.doc_id
+	        AND A.mo_no = #{moNo}
+	</select>
+
+	<update id="updateResult" parameterType="myorderVO">
+		    update my_order
+            set O_RESULT = #{oResult}
+            where mo_no = #{moNo}
+	</update>
+
+	<select id="selectUsedOrderset" resultType="usedOrdersetVO" parameterType="string">
+		select a.m_no, c.p_name, c.p_sex, a.m_name ,a.d_name, a.m_date
+	      from medi_reco a , my_order b , patient c
+	     where a.m_no = b.m_no
+	       and a.p_no = c.p_no
+           and b.mo_no = #{moNo}
+	</select>
+
+	<update id="modifyMyOrderset" parameterType="ordersetVO">
+		update my_order
+		   set  o_dname = #{oDname}, o_target=#{oTarget}, o_regdate= sysdate, o_title = #{oTitle}, o_noti = #{oNoti}
+		   where mo_no = #{moNo}
+	</update>
+
+	<update id="deleteMyOrderset" parameterType="string">
+		update my_order
+		   set  del_yn= 'Y'
+		   where mo_no = #{moNo}
+	</update>
+
+	<update id="deleteMyOrdersetDrugs" parameterType="string">
+		 delete from my_drug
+     	  where mo_no = #{moNo}
+	</update>
+
+	<update id="updateCaution"  parameterType="myorderVO">
+		UPDATE my_order
+		    SET
+		        o_caution = #{oCaution}
+		WHERE
+		    mo_no = #{moNo}
+	</update>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

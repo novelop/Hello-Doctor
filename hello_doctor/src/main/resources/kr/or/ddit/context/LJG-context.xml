@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+<!-- Repository -->
+
+
+<!-- DAO   -->
+<bean id="coTaskdao" class="kr.or.ddit.dao.CoTaskDAOImpl"
+	p:session-ref="sqlSession"
+/>
+<bean id="mediRecodao" class="kr.or.ddit.dao.MediRecoDAOImpl"
+p:session-ref="sqlSession"
+/>
+<bean id="myOrderdao" class="kr.or.ddit.dao.MyOrderDAOImpl"
+p:session-ref="sqlSession"
+/>
+<bean id="diseaseDAO" class="kr.or.ddit.dao.DiseaseDAOImpl"
+p:session-ref="sqlSession"
+/>
+<bean id="registDAO" class="kr.or.ddit.dao.RegistDAOImpl"
+ p:session-ref="sqlSession"/>
+
+ <bean id="ordersetDAO" class="kr.or.ddit.dao.OrdersetDAOImpl"
+		p:session-ref="sqlSession"
+	/>
+ <bean id="notiDAO" class="kr.or.ddit.dao.NotiDAOImpl"
+		p:session-ref="sqlSession"
+	/>
+ <bean id="patientDAO" class="kr.or.ddit.dao.PatientDAOImpl"
+		p:session-ref="sqlSession"
+	/>
+
+<bean id="medicineDAO" class="kr.or.ddit.dao.MedicineDAOImpl"
+ p:session-ref="sqlSession"/>
+
+<!-- Service -->
+<bean id="mediRecoservice" class="kr.or.ddit.service.MediRecoServiceImpl"
+		p:coTaskdao-ref="coTaskdao"
+		p:mediRecodao-ref="mediRecodao"
+		p:myOrderdao-ref="myOrderdao"
+		p:doctorDAO-ref="doctorDAO"
+		p:cooperMydao-ref="cooperMyDao"
+/>
+<bean id="myOrderservice" class="kr.or.ddit.service.MyOrderServiceImpl"
+		p:my_OrderDAO-ref="myOrderdao"
+		p:ordersetDAO-ref="ordersetDAO"
+	/>
+<bean id="diseaseService" class="kr.or.ddit.service.DiseaseServiceImpl"
+		p:diseaseDAO-ref="diseaseDAO"
+/>
+<bean id="registService" class="kr.or.ddit.service.RegistServiceImpl"
+      p:registDao-ref="registDAO"/>
+
+<bean id="medicineService" class="kr.or.ddit.service.MedicineServiceImpl"
+	p:medicineDAO-ref="medicineDAO"/>
+<bean id="patientService" class="kr.or.ddit.service.PatientServiceImpl"
+	p:patientDAO-ref="patientDAO"/>
+
+<bean id="notiService" class="kr.or.ddit.service.NotiServiceImpl"
+	p:doctorDAO-ref="doctorDAO"
+	p:notiDAO-ref="notiDAO"
+	/>
+
+
+</beans>
+
+

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+
+	<!-- summernote Image Path -->
+
+	<!-- member.picture -->
+	<bean id="tempimgPath" class="java.lang.String">
+		<constructor-arg value="${medi.temppic}" />
+	</bean>
+	<bean id="recoFilePath" class="java.lang.String">
+		<constructor-arg value="${medi.recoFilePath}" />
+	</bean>
+	<bean id="doctorFilePath" class="java.lang.String">
+		<constructor-arg value="${doctor.doctorFilePath}" />
+	</bean>
+	<bean id="caseFilePath" class="java.lang.String">
+		<constructor-arg value="${case.filePath}" />
+	</bean>
+	
+
+	<!-- file upload -->
+
+
+	<!-- Repository -->
+
+
+	<!-- DAOBean -->
+
+
+	<!-- Service -->
+
+
+</beans>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Noti-Mapper">
+	<select id="selectAllCo" resultType="coDoctorVO">
+
+
+		     SELECT
+    d_id,
+    co_no,
+    paty_yn,
+    authority,
+    hand_yn
+FROM
+    co_doctor
+where d_id = #{dId}
+
+	 </select>
+ <select id="notiList" resultType="notiVO">
+  SELECT
+    a.noti_no,
+    (select d_name from doctor where d_id = a.reqd_id) as reqd_id,
+    (select d_name from doctor where d_id = a.resd_id) as resd_id,
+    a.noti_date,
+    b.co_disease,
+    (select d_pic from doctor where d_id = a.reqd_id) as d_pic
+FROM
+    noti a , co_med b, doctor c
+    where a.co_no = b.co_no
+    and a.resd_id = c.d_id
+    and a.resd_id = #{dId}
+    and a.read = 1
+	order by a.noti_date desc
+
+ </select>
+ <select id="notiAllList" resultType="notiVO">
+  SELECT
+    a.noti_no,
+    (select d_name from doctor where d_id = a.reqd_id) as reqd_id,
+    (select d_name from doctor where d_id = a.resd_id) as resd_id,
+    a.noti_date,
+    b.co_disease,
+    (select d_pic from doctor where d_id = a.reqd_id) as d_pic,
+    d.p_name,
+    b.co_opinion,
+    a.response
+FROM
+    noti a , co_med b, doctor c, patient d
+    where a.co_no = b.co_no
+    and a.resd_id = c.d_id
+    and b.p_no = d.p_no
+    and a.resd_id = #{dId}
+	order by a.noti_date desc
+
+ </select>
+ <select id="countnoti" resultType="int">
+
+	select count(*)
+	from noti
+	where read = 1
+    and resd_id = #{dId}
+
+ </select>
+</mapper>

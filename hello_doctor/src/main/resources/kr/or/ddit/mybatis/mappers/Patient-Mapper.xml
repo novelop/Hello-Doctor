@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Patient-Mapper">
+<update id="insertPatient">
+INSERT INTO patient (
+    p_no,
+    p_name,
+    p_sex,
+    p_rnum,
+    p_tel,
+    p_address,
+    p_insurance
+) VALUES (
+     #{pNo},
+    #{pName},
+    #{pSex},
+    #{pRnum},
+    #{pTel},
+    #{pAddress},
+    'Y'
+)
+
+
+
+ </update>
+ <select id="selectAllDoc" resultType="doctorVO">
+ 	 SELECT
+    a.d_id,
+    a.ma_no,
+    a.d_name,
+    a.pwd,
+    a.tel,
+    a.email,
+    a.status,
+    a.d_pic,
+    a.regdate,
+    a.account_status,
+    a.resident_num,
+    a.retiredate,
+    a.sus_startdate,
+    a.sus_enddate,
+    a.otp_qr,
+    a.otp_co,
+    a.d_office,
+    a.d_exam,
+    a.authority,
+    a.enabled,
+    b.ma_name
+FROM
+    doctor a , major b
+where a.ma_no = b.ma_no
+
+ </select>
+ <update id="reserveMed">
+  INSERT INTO reservation (
+    rsv_no,
+    rsv_day,
+    d_id,
+    p_no,
+    rsv_name,
+    rsv_status
+) VALUES (
+   #{rsvNo},
+    to_date(#{rsvDay2}, 'YYYY/MM/DD HH24:MI'),
+    #{dId},
+    #{pNo},
+    #{rsvName},
+    1
+)
+
+ </update>
+<select id="selectAllPatient" resultType="patientVO">
+SELECT
+    p_no,
+    p_name,
+    p_sex,
+    p_rnum,
+    p_tel,
+    p_address,
+    p_insurance
+FROM
+    patient
+
+
+</select>
+<select id="selectAllSubTask" resultType="subTaskVO">
+  SELECT
+    sub_no,
+    ta_no,
+    sub_name,
+    sub_date,
+    l_file,
+    l_path,
+    l_type,
+    end_day,
+    start_day,
+    color,
+    complete_yn
+FROM
+    sub_task
+where complete_yn = 'N'
+
+</select>
+<update id="completeSubTask">
+UPDATE sub_task
+SET
+    end_day = sysdate,
+    complete_yn = 'Y'
+
+WHERE
+    sub_no = #{subNo}
+
+
+
+</update>
+<select id="getPatientSeq" resultType="int">
+
+select patient_seq.nextval from dual
+
+</select>
+<select id="getReservationSeq" resultType="int">
+
+select reservation_seq.nextval from dual
+</select>
+
+</mapper>

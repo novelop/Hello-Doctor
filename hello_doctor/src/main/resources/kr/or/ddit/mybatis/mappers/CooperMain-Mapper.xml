@@ -1,0 +1,1000 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CooperMain-Mapper">
+
+
+	<sql id="search">
+
+		<if test="searchType == 't'.toString()">
+			and d.p_name like '%'||#{keyword}||'%'
+		</if>
+
+		<if test="searchType == 'w'.toString()">
+			and c.co_disease like '%'||#{keyword}||'%'
+		</if>
+
+		<if test="searchType == 'c'.toString()">
+			and e.d_name like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'tcw'.toString()">
+			and (
+			d.p_name like '%'||#{keyword}||'%'
+			or
+			c.co_disease like
+			'%'||#{keyword}||'%'
+			or
+			c.co_doc like '%'||#{keyword}||'%'
+			)
+		</if>
+	</sql>
+
+
+
+	<!-- 참여중인 협진리스트 -->
+	<select id="selectJoinList" resultType="joinCooperVO"
+		parameterType="str">
+<!-- 		 select -->
+<!-- 		d.p_no,d.p_name,d.p_rnum,c.co_disease,c.co_no,c.co_doc ,e.d_name ,e.d_pic , f.ma_name -->
+<!-- 		from patient d,doctor e,major f, -->
+<!-- 		(select b.D_ID,b.CO_NO,a.p_no,a.co_disease,a.co_doc -->
+<!-- 		from co_doctor b, -->
+<!-- 		(select co_no,p_no,co_disease,co_doc -->
+<!-- 		from co_med -->
+<!-- 		where co_ing_status = -->
+<!-- 		1) a -->
+<!-- 		where a.co_no=b.co_no -->
+<!-- 		and b.paty_yn='Y' -->
+<!-- 		and b.D_ID= #{dId})c -->
+<!-- 		where d.p_no=c.p_no -->
+<!-- 		and e.d_id = c.co_doc -->
+<!--        and e.ma_no = f.ma_no -->
+
+ select
+		d.p_no,d.p_name,d.p_rnum,c.co_disease,c.co_no,c.co_doc ,e.d_name ,e.d_pic , f.ma_name, g.cof_regdate
+		from patient d,doctor e,major f, co_freq g ,
+		(select b.D_ID,b.CO_NO,a.p_no,a.co_disease,a.co_doc
+		from co_doctor b,
+		(select co_no,p_no,co_disease,co_doc
+		from co_med
+		where co_ing_status =
+		1) a
+		where a.co_no=b.co_no
+		and b.paty_yn='Y'
+		and b.D_ID= #{dId})c
+		where d.p_no=c.p_no
+		and e.d_id = c.co_doc
+       and e.ma_no = f.ma_no
+       and g.co_no(+) = c.co_no
+        and g.d_id(+) =  #{dId}
+
+		<include refid="search">
+		</include>
+ order by g.cof_regdate asc
+	</select>
+
+	<!-- 참여중인 협진리스트 count(*)구하기 -->
+	<select id="joinListCount" resultType="int" parameterType="str">
+<!-- 		select count(*) -->
+<!-- 		from -->
+<!-- 		(select d.p_no ,d.p_name,d.p_rnum,c.co_disease,c.co_no,c.co_doc -->
+<!-- 		from -->
+<!-- 		patient d, -->
+<!-- 		(select b.D_ID,b.CO_NO,a.p_no,a.co_disease,a.co_doc -->
+<!-- 		from -->
+<!-- 		co_doctor b, -->
+<!-- 		(select co_no,p_no,co_disease,co_doc -->
+<!-- 		from co_med -->
+<!-- 		where -->
+<!-- 		co_ing_status = 1) a -->
+<!-- 		where a.co_no=b.co_no -->
+<!-- 		and b.paty_yn='Y' -->
+<!-- 		and b.D_ID= -->
+<!-- 		#{dId})c -->
+<!-- 		where d.p_no=c.p_no) -->
+
+		select
+		count(*)
+		from patient d,doctor e,major f, co_freq g,
+		(select b.D_ID,b.CO_NO,a.p_no,a.co_disease,a.co_doc
+		from co_doctor b,
+		(select co_no,p_no,co_disease,co_doc
+		from co_med
+		where co_ing_status =
+		1) a
+		where a.co_no=b.co_no
+		and b.paty_yn='Y'
+		and b.D_ID= #{dId})c
+		where d.p_no=c.p_no
+		and e.d_id = c.co_doc
+		and e.ma_no = f.ma_no
+        and g.co_no(+) = c.co_no
+		<include refid="search"></include>
+	</select>
+
+
+	<!-- 환자의 최근 진료일 구하기 -->
+	<select id="selectMaxDate" resultType="Date" parameterType="str">
+
+		select max(m_date) as m_date
+		from medi_reco
+		where p_no= #{p_no}
+
+	</select>
+
+	<!-- 특이사항 -->
+
+
+<select id="selectIssueList" resultType="issueVO" parameterType="str">
+
+<!-- SELECT -->
+<!--     a.iss_no, -->
+<!--     a.iss_content, -->
+<!--     c.d_name, -->
+<!--     d.ma_name, -->
+<!--     to_char(b.m_date,'YYYY-MM-DD HH24:MI')as m_date, -->
+<!--     f.p_name, -->
+<!--     g.co_disease, -->
+<!--     f.p_sex, -->
+<!--     f.p_rnum -->
+<!-- FROM -->
+<!--     issue a, medi_reco b, doctor c, major d, com_reco e, patient f, co_med g -->
+<!-- where a.iss_no = b.iss_no -->
+<!-- and b.d_id = c.d_id -->
+<!-- and c.ma_no = d.ma_no -->
+<!-- and b.m_no = e.m_no -->
+<!-- and f.p_no = b.p_no -->
+<!-- and g.co_no = e.co_no -->
+<!-- and e.co_no in (select h.co_no from co_doctor h where h.d_id =#{dId}) -->
+<!-- order by b.m_date desc -->
+
+SELECT
+    a.iss_no,
+    a.iss_content,
+    c.d_name,
+    d.ma_name,
+    to_char(b.m_date,'YYYY-MM-DD HH24:MI')as m_date,
+    f.p_name,
+    g.co_disease,
+    f.p_sex,
+    f.p_rnum,
+    g.co_no,
+    g.co_doc,
+    b.d_id
+
+FROM
+    issue a, medi_reco b, doctor c, major d, com_reco e, patient f, co_med g
+where a.iss_no = b.iss_no
+and b.d_id = c.d_id
+and c.ma_no = d.ma_no
+and b.m_no = e.m_no
+and f.p_no = b.p_no
+and g.co_no = e.co_no
+and e.co_no in (select h.co_no from co_doctor h where h.d_id =#{dId})
+order by b.m_date desc
+
+</select>
+<!-- 주치의 이름 구하기  -->
+<select id="selectCodocName" resultType="str" parameterType="str">
+select d_name
+from doctor
+where d_id = #{dId}
+</select>
+
+	<select id="selectHistoryComment"
+		resultType="myHistoryCommentVO" parameterType="str">
+
+	select e.*, f.d_pic,f.d_name
+	from doctor f,
+	(select d.com_no,d.com_co_no,d.d_id,d.co_no,d.com_content,
+	TO_CHAR(d.com_date,'YYYY-MM-DD HH24:MI') as com_date,c.ta_no,c.ta_name,ta_date
+
+	from com_coment d,
+	(select a.com_no ,a.ta_no,g.ta_name,to_char(g.ta_date,'YYYY-MM-DD') as ta_date
+	from com_reco a ,medi_reco b,co_task g
+	where b.d_id = #{dId}
+	and a.m_no = b.m_no
+    and a.ta_no= g.ta_no
+    )c
+	where c.com_no = d.com_no
+	and d.del_yn ='N')e
+	where f.d_id=e.d_id
+	order by com_date desc
+
+
+	</select>
+
+
+<!-- 요청받은 협진 -->
+	<select id="selectNoti" resultType="notiVO" parameterType="str">
+
+         select a.noti_date, a.reqd_id,a.resd_id,a.response, a.noti_no, b.d_name as reqd_name ,c.ma_name
+		from noti a ,doctor b ,major c
+		where a.resd_id = #{dId}
+        and a.reqd_id = b.d_id
+        and b.ma_no = c.ma_no
+        order by 1 DESC
+	</select>
+
+	<!-- 요청한 협진-->
+<select id = "selectRequestNoti" resultType="notiVO" parameterType="str">
+
+ select a.noti_date, a.reqd_id,a.resd_id,a.response, a.noti_no,b.d_name as resd_name ,c.ma_name
+from noti a, doctor b ,major c
+where reqd_id = #{dId}
+and a.resd_id = b.d_id
+and b.ma_no = c.ma_no
+order by 1 DESC
+
+</select>
+
+	<select id="selectapproveList" resultType="coDocApproveVO"
+		parameterType="str">
+
+
+
+select e.* ,f.tn_status,f.tn_yn,f.tn_no
+	from task_approve f,
+	(select c.* ,d.d_id,d.ta_no,g.d_name as reqd_name
+	from co_task d,doctor g,
+	(select a.co_no,a.p_no, a.co_disease,a.co_doc,b.p_name,b.p_rnum
+	from patient b,
+	(select co_no,p_no,co_disease,co_doc
+	from co_med
+	where co_ing_status = 1
+	and co_doc= #{dId})a
+	where a.p_no = b.p_no)c
+	where c.co_no = d.co_no
+	and d.d_id != #{dId}
+    and d.d_id = g.d_id
+    )e
+	where e.ta_no = f.ta_no
+    and f.tn_yn='N'
+
+
+	</select>
+
+	<select id="selectapproveComplete" resultType="coDocApproveVO" parameterType="str">
+select e.* ,f.tn_status,f.tn_yn,f.tn_no
+	from task_approve f,
+	(select c.* ,d.d_id,d.ta_no,g.d_name as reqd_name ,d.ta_status
+	from co_task d,doctor g,
+	(select a.co_no,a.p_no, a.co_disease,a.co_doc,b.p_name,b.p_rnum
+	from patient b,
+	(select co_no,p_no,co_disease,co_doc
+	from co_med
+	where co_ing_status = 1
+	and co_doc= #{dId})a
+	where a.p_no = b.p_no)c
+	where c.co_no = d.co_no
+	and d.d_id != #{dId}
+    and d.d_id = g.d_id
+    )e
+	where e.ta_no = f.ta_no
+    and f.tn_yn='Y'
+
+
+	</select>
+
+	<select id="selectmyapproveList" resultType="didApproveVO"
+		parameterType="str">
+
+	select e.*,f.ta_no,f.ta_name,f.ta_content,f.ta_date,f.ta_status
+		from co_task f,
+		(select c.* , d.p_name, d.p_rnum
+		from patient d,
+		(select b.D_ID,b.CO_NO,a.p_no,a.co_disease,a.co_doc,g.d_name as co_doc_name
+		from co_doctor b,doctor g,
+		(select co_no,p_no,co_disease,co_doc
+		from co_med
+		where co_ing_status = 1) a
+		where a.co_no=b.co_no
+		and b.paty_yn='Y'
+		and b.D_ID=#{dId}
+		and b.d_id != a.co_doc
+        and a.co_doc= g.d_id
+        )c
+		where c.p_no = d.p_no)e
+		where e.co_no = f.co_no
+		order by ta_no DESC
+	<!--  and f.ta_status != 0 -->
+
+	</select>
+
+<!-- 레퍼런스를 가지는지 안가지는지 확인 -->
+
+<select id ="checkReferTaNo" resultType="str">
+   select ta_reference
+    from co_task
+    where ta_no = #{taNo}
+</select>
+
+<!--  -->
+
+<select id="updateReferStatus" parameterType="str">
+    update co_task set ta_status = 3 where ta_no = #{taNo}
+</select>
+
+
+<!-- 협진상세페이지 -->
+<!-- 해당협진의 진료  -->
+<!-- 주치의의 1:승인 2:미승인  -->
+
+<!-- 주치의 구하기  -->
+
+<select id="selectCodoc" resultType="str" parameterType="str" >
+select co_doc
+from co_med
+where co_no = #{coNo}
+</select>
+
+<select id="selectCoTaskList" parameterType="str" resultType="coTaskASubVO">
+	select
+	a.ta_no,a.co_no,a.d_id,a.ta_name,a.ta_content,to_char(a.ta_date,'YYYY-MM-DD
+	HH:mi') as ta_date, b.co_doc, c.d_name
+	from co_task a, co_med b, doctor c
+	where a.co_no = #{coNo}
+	and a.ta_status = 1
+	and	a.reserv_yn = 'N'
+	and a.co_no = b.co_no
+	and a.d_id = c.d_id
+	and to_char(a.ta_date, 'YYYY-MM-DD') >= to_char(sysdate, 'YYYY-MM-DD')
+	order by a.ta_date
+
+</select>
+
+<!--해당 진료의 하위업무구하기 (yn상관없이) -->
+<select id= "selectSubTaskList" parameterType="Map" resultType="coSubTaskVO">
+
+	select b.sub_no,b.sub_name,
+	to_char(sub_date,'YYYY-MM-DD HH:mm') as sub_date
+	,b.complete_yn,a.*
+	from sub_task b,
+	(select ta_no,co_no,d_id,ta_name,ta_content,to_char(ta_date,'YYYY-MM-DD
+	HH:mm') as ta_date ,ta_status,reserv_yn
+	from co_task
+	where co_no = #{coNo}
+	and ta_status = 1
+	and reserv_yn = 'N') a
+	where a.ta_no = b.ta_no
+	and b.ta_no = #{taNo}
+
+</select>
+
+
+<!-- 하위업무중에서 완료Y인것 구하기(진행도를 위한 갯수구하기) -->
+<select id= "selectSubYCount" parameterType="Map" resultType="int">
+
+<!-- 	select count(*)
+	from
+	(select b.sub_no,b.sub_name,b.sub_date,b.complete_yn,a.*
+	from sub_task b,
+	(select *
+	from co_task
+	where co_no = #{coNo}
+	and ta_status = 1
+	and reserv_yn = 'N') a
+	where a.ta_no = b.ta_no
+	and b.ta_no = #{taNo}
+	and complete_yn = 'Y') -->
+
+	select count(*)
+	from
+	(select b.sub_no,b.sub_name,
+	to_char(b.sub_date,'YYYY-MM-DD HH:mm') as sub_date,
+	b.complete_yn,a.*
+	from sub_task b,
+	(select ta_no,co_no,d_id,ta_name,ta_content,to_char(ta_date,'YYYY-MM-DD
+	HH:mm') as ta_date,ta_status,reserv_yn
+	from co_task
+	where co_no = #{coNo}
+	and ta_status = 1
+	and reserv_yn = 'N') a
+	where a.ta_no = b.ta_no
+	and b.ta_no = #{taNo}
+	and complete_yn = 'Y'
+	)
+
+</select>
+
+
+<!-- 진료히스토리 --><!-- 진료 -->
+<select id= "selectHistoryList" resultType="reserveHistoryVO" parameterType="str">
+
+	    select c.p_rnum, c.p_sex, c.p_name, to_char(a.com_date, 'YYYY-MM-DD HH:MI') as ta_date, a.com_date , d.d_name as d_id,
+    e.ta_name, e.ta_content, a.com_no as ta_no
+
+    from com_reco a, medi_reco b, patient c, doctor d, co_task e
+
+    where a.m_no = b.m_no
+    and b.p_no = c.p_no
+    and b.d_id = d.d_id
+    and a.ta_no = e.ta_no
+    and  a.co_no = #{coNo}
+    order by a.com_date desc
+
+</select>
+
+<!--해당 협진 환자의 가장 최근 진료기록 >-->
+<select id="selectLast" resultType="comRecoVO" parameterType="str">
+
+	select symptom,m_date ,m_no
+	from medi_reco
+	where m_no =(
+	select m_no
+	from
+	(select *
+	from com_reco
+	where co_no = #{coNo}
+	order by com_date DESC)
+	where ROWNUM =1)
+</select>
+
+
+<select id = "selectLastPrescript" resultType="lastPrescriptVO" parameterType="str">
+
+	select *
+	from prescript
+	where m_no = #{mNo}
+
+</select>
+
+<!-- 협진상세페이지의 특이사항출력 -->
+
+<select id="selectMyIssueList" resultType = "myIssueVO" parameterType="str">
+
+
+select b.m_no, a.iss_content, a.iss_no, d.d_name, d.d_id, b.m_date, d_pic
+from issue a, medi_reco b, com_reco c, doctor d
+where a.iss_no = b.iss_no
+and b.m_no = c.m_no
+and b.d_id = d.d_id
+and c.co_no = #{coNo}
+order by b.m_date DESC
+
+</select>
+
+<!--협진상세에서 의료진 눌렀을 때 -->
+
+<select id = "coDocList" resultType="coDoctorListVO" parameterType="str">
+
+select a.d_id,a.co_no,b.ma_no,b.d_name,b.status,b.d_pic,c.ma_name
+from doctor b, major c,
+(select *
+from co_doctor
+where co_no = #{coNo}
+and paty_yn = 'Y') a
+where a.d_id=b.d_id
+and b.ma_no = c.ma_no
+
+</select>
+
+<select id="selectChartFile" resultType="lastChartFileVO" parameterType="str">
+
+select *
+from medi_file
+where m_no = #{mNo}
+
+</select>
+
+<select id="selectChartPicFile" resultType="chartPicFileVO" parameterType="str">
+
+select *
+from med_pic
+where m_no = #{mNo}
+
+</select>
+
+<!-- 특정날짜 히스토리 조회 -->
+<select id ="selectDateHistory" resultType="reserveHistoryVO" parameterType="map">
+
+<!-- select c.*, d.p_name,d.p_sex,d.p_rnum -->
+<!--     from patient d , -->
+<!--     (select a.*, b.p_no,b.co_disease -->
+<!--     from co_med b, -->
+<!--     (select ta_no,co_no,d_id,ta_name,ta_content,TO_CHAR(ta_date,'YYYY-MM-DD HH24:MI') as ta_date, -->
+<!--     ta_status,reserv_yn -->
+<!-- 	from co_task -->
+<!-- 	where co_no = #{coNo} -->
+<!-- 	and ta_status = 1 -->
+<!-- 	and reserv_yn = 'Y' -->
+<!--     and TO_CHAR(ta_date,'YYYY-MM-DD') = #{taDate} -->
+<!--     )a -->
+<!--     where a.co_no = b.co_no)c -->
+<!--     where c.p_no = d.p_no -->
+
+
+
+     select c.p_rnum, c.p_sex, c.p_name, to_char(a.com_date, 'YYYY-MM-DD HH:MI') as ta_date, a.com_date , d.d_name as d_id,
+    e.ta_name, e.ta_content, a.com_no as ta_no
+
+    from com_reco a, medi_reco b, patient c, doctor d, co_task e
+
+    where a.m_no = b.m_no
+    and b.p_no = c.p_no
+    and b.d_id = d.d_id
+    and a.ta_no = e.ta_no
+    and  a.co_no = #{coNo}
+    and TO_CHAR(ta_date,'YYYY-MM-DD') = #{taDate}
+    order by a.com_date desc
+
+
+</select>
+<!-- 자주찾는 협진 리스트(즐겨찾기)  -->
+<select id = "selectCoFreq" resultType="coFreqVO" parameterType="str">
+
+	select
+	a.co_no,a.d_id, TO_CHAR(a.cof_regdate,'YYYY-MM-DD') as cof_regdate ,
+	b.p_no,b.co_doc,b.co_disease,c.p_name, c.p_sex, c.p_rnum, e.d_name, f.ma_name, e.d_pic
+	from co_freq a, co_med b ,patient c, co_doctor d, doctor e,major f
+	where  a.co_no = b.co_no
+	and b.p_no = c.p_no
+   	and b.co_no = d.co_no
+   	and e.d_id = d.d_id
+   	and b.co_ing_status = 1
+   	and d.paty_yn = 'Y'
+   	and e.ma_no = f.ma_no
+    and d.d_id=#{dId}
+
+</select>
+
+<!-- 협진예약 테이블에 INSERT -->
+
+<!-- sequence 불러오기
+ta_status 1:승인 0:미승인
+ -->
+
+<select id="selectCoTaskSeqNext" resultType="int">
+		select COTASK_SEQ.nextval as ta_no from dual
+	</select>
+<update id="insertReserve" parameterType="coTaskASubVO">
+
+	insert into co_task
+	(ta_no,co_no,d_id,ta_name,ta_content,ta_date,ta_status,reserv_yn)
+	values(#{taNo},#{coNo},#{dId},#{taName},#{taContent},to_date(#{taDate},'YYYY-MM-DD HH24:MI'),#{taStatus},'N')
+
+</update>
+<update id="updateReserve" parameterType="coTaskASubVO">
+
+	insert into co_task
+	(ta_no,co_no,d_id,ta_name,ta_content,ta_date,ta_status,reserv_yn, ta_reference )
+	values(#{taNo},#{coNo},#{dId},#{taName},#{taContent}, to_date(#{taDate} ,'YYYY-MM-DD HH24:MI') , #{taStatus},'N',#{taReference})
+
+</update>
+
+
+<!-- 업무승인 테이블에 insert하기! -->
+
+<select id="selectTaskApproveSeqNext" resultType="int">
+		select TASKAPPROVE_SEQ.nextval as tn_no from dual
+	</select>
+
+<update id = "insertTaskApprove" parameterType="coDocApproveVO">
+insert into task_approve (tn_no,ta_no,tn_status,tn_yn)
+values(#{tnNo},#{taNo},1,'N')
+
+</update>
+<update id = "updateTaskApprove" parameterType="coDocApproveVO">
+insert into task_approve (tn_no,ta_no,tn_noti,tn_status,tn_yn)
+values(#{tnNo},#{taNo},'N',2,'N')
+
+</update>
+<!-- 예약 삭제 요청 -->
+<update id = "deleteTaskApprove" parameterType="str">
+   UPDATE task_approve
+SET
+    tn_status = 3,
+    tn_yn = 'N'
+WHERE
+    ta_no = #{taNo}
+
+</update>
+<!-- 주치의 예약 직접 삭제  -->
+<update id = "deleteCoTask" parameterType="str">
+   UPDATE co_task
+	SET
+    ta_status = 3
+	WHERE
+    ta_no = #{taNo}
+
+</update>
+
+
+<!-- 하위 업무 인서트하기  -->
+<select id="selectSubTaskSeqNext" resultType="int">
+		select SUBTASK_SEQ.nextval as sub_no from dual
+	</select>
+
+<update id= "insertSubTask" parameterType="coSubTaskVO">
+
+insert into sub_task(sub_no,ta_no,sub_name,sub_date,complete_yn)
+values(#{subNo},#{taNo},#{subName},to_date(#{subDate},'YYYY-MM-DD HH24:MI'),'N')
+
+</update>
+
+
+<!-- 예약상세보기 -->
+<select id="selectReserveDetail" parameterType="str" resultType="coTaskASubVO" >
+  select a.ta_no,to_char(a.ta_date, 'YYYY-MM-DD HH24:MI') as ta_date,
+    a.ta_name,
+    a.d_id,a.ta_content,b.d_name
+ from co_task a ,doctor b
+ where a.ta_no = #{taNo}
+ and a.d_id = b.d_id
+
+</select>
+
+
+<!-- 하위업무구하기 -->
+
+<select id="selectSub" parameterType="str" resultType="coSubTaskVO">
+
+ select  sub_no , sub_name,to_char(sub_date,'YYYY-MM-DD HH24:MI') as sub_date ,complete_yn
+from sub_task
+where ta_no = #{taNo}
+
+
+</select>
+
+
+<!-- 주치의가 수 락 버튼을 눌렀을때 -->
+<!-- tastatus가 1로 바뀌고 업무승인 테이블의 tn_yn을 Y로 바꾼다 -->
+
+<update id="coTaskTaStatus" parameterType="str">
+update co_task set ta_status = 1 where ta_no = #{taNo}
+</update>
+
+<update id="taskApproveTnYn" parameterType="str">
+update task_approve set tn_yn = 'Y' where ta_no = #{taNo}
+</update>
+
+<!-- 진료기록에서 클릭했을 때 상세보기  -->
+
+<select id= "selecthistoryDetail" parameterType="str" resultType="comRecoVO">
+   select a.com_no,a.m_no,a.co_no,a.ta_no, d.d_Name as d_id, b.p_no,b.symptom ,b.m_date,b.d_name,
+    c.p_name,c.p_sex,c.p_rnum
+    from com_reco a, medi_reco b ,patient c, doctor d
+    where  a.m_no = b.m_no
+     and b.p_no = c.p_no
+     and b.d_id = d.d_id
+     and a.com_no = #{comNo}
+</select>
+
+
+
+<!-- 해당 진료의 댓글 불러오기 -->
+<select id="historyCommentList" parameterType="str" resultType="myHistoryCommentVO">
+
+  SELECT
+    a.com_co_no
+   ,a.com_no
+   ,a.d_id
+   ,a.com_content
+   ,TO_CHAR(a.com_date,'YYYY-MM-DD HH24:MI') as com_date
+   ,a.del_yn
+   ,b.ma_no
+   ,b.d_name
+   ,b.status
+   ,b.d_pic
+   ,c.ma_name
+FROM
+    com_coment a
+   ,doctor b
+   ,major c
+WHERE
+    com_no = (
+        SELECT
+            com_no
+        FROM
+            com_reco
+        WHERE
+            m_no = #{mNo}
+    )
+    AND   a.del_yn = 'N'
+    AND   a.d_id = b.d_id
+    AND   b.ma_no = c.ma_no
+    order by com_date ASC
+
+
+</select>
+
+
+<!-- 진료결과상세보기에서 댓글 인서트 -->
+
+<select id="comCoNoSeqNext" resultType="int">
+		select COMCOMENT_SEQ.nextval as com_co_no from dual
+	</select>
+
+
+<update id= "insertReply" parameterType="myHistoryCommentVO">
+  insert into com_coment(com_co_no,com_no,d_id,co_no,com_content,com_date,del_yn)
+  values(#{comCoNo},#{comNo},#{dId},#{coNo},#{comContent},sysdate,'N')
+</update>
+
+
+
+<!-- reply update -->
+<update id="replyUpdate" parameterType="map">
+  update com_coment set com_content = #{comContent} ,com_date = to_date(sysdate,'YYYY-MM-DD HH24:MI:SS')
+ where com_co_no = #{comCoNo}
+</update>
+
+<!-- 해당(특정)댓글 가져오기  -->
+<select id="selectReply" resultType="myHistoryCommentVO" parameterType="str">
+ select com_co_no,com_no,d_id,co_no,com_content,
+    TO_CHAR(com_date,'YYYY-MM-DD HH24:MI') as com_date
+    ,del_yn
+from com_coment
+where com_co_no = #{comCoNo}
+</select>
+
+<update id="replyRemove" parameterType="str">
+update com_coment set del_yn = 'Y' where com_co_no = #{comCoNo}
+</update>
+<!-- 의료진상세정보 -->
+<select id = "selectDoc" resultType="selDocVO">
+
+   SELECT DISTINCT
+    a.d_id
+   ,a.ma_no
+   ,a.d_name
+   ,a.tel
+   ,a.d_pic
+   ,a.d_office
+   ,b.ma_name
+   ,c.sm_name
+FROM
+    doctor a
+   ,major b
+   ,sub_major c
+WHERE
+    a.d_id = #{dId}
+    AND   a.ma_no = b.ma_no
+    AND   b.ma_no = c.ma_no
+
+</select>
+
+<!-- 해당의료진이 맡고 있는 진료 -->
+
+<select id="selectTaskList" parameterType="map" resultType="coTaskASubVO">
+SELECT
+   d_id
+   ,co_no
+   ,ta_no
+   ,ta_name
+   ,ta_content
+   ,ta_date
+   ,reserv_yn
+FROM
+    co_task
+WHERE
+    d_id = #{dId}
+    AND   ta_status = 1
+    AND   reserv_yn = 'N'
+    AND   co_no = #{coNo}
+   and to_char(ta_date, 'YYYY-MM-DD') >= to_char(sysdate, 'YYYY-MM-DD')
+    order by ta_date desc
+</select>
+
+
+<update id="taskdIdUpdate" parameterType="map">
+ update co_task set d_id = #{dId} where ta_no = #{taNo}
+</update>
+
+<select id="selectAllCoFile" resultType="medFileVO">
+ select c.mf_no, c.mf_filename, to_char(d.m_date, 'YYYY-MM-DD') as m_date, d.d_id
+    from medi_file c, medi_reco d
+    where c.m_no = d.m_no
+    and c.m_no  in
+    (select b.m_no
+    from co_med a , com_reco b
+    where a.co_no = b.co_no
+    and a.co_no = #{coNo})
+</select>
+
+
+<update id="inviteDoc" parameterType="map">
+    insert into co_doctor(d_id,co_no,paty_yn,authority,hand_yn)
+    values(#{dId},#{coNo},'N',1,'N')
+</update>
+
+
+<select id= "selectCodId" parameterType="str" resultType="str" >
+
+	select d_id
+	from co_doctor
+	where co_no = #{coNo}
+	and paty_yn='Y'
+</select>
+
+<update id="coExit" parameterType="map">
+    update co_doctor set paty_yn = 'R' where d_id= #{dId} and co_no = #{coNo}
+</update>
+
+<select id="selectAllComComent" resultType="comComentVO">
+SELECT
+    com_co_no,
+    com_no,
+    d_id,
+    co_no,
+    com_content,
+    com_date,
+    del_yn
+FROM
+    com_coment
+where com_co_no = #{comCoNo}
+
+</select>
+
+<!-- 자주찾는 협진 등록 -->
+<update id= "FreqRegist" parameterType="map" >
+insert into co_freq(co_no,d_id,cof_regdate) values (#{coNo},#{dId},sysdate)
+</update>
+
+<!-- 자주찾는 협진에서 삭제하기 -->
+<update id = "FreqCancel" parameterType="map">
+delete from co_freq where d_id=#{dId} and co_no = #{coNo}
+</update>
+
+<!-- 협진 요청된 환자 정보 -->
+<select id="noticeRequestinfo" resultType="notiVO">
+    select
+    a.noti_no,a.resd_id,(select d_name from doctor where d_id = a.resd_id) as resd_name , a.reqd_id, a.noti_date  , b.co_no, b.co_opinion, b.co_disease, c.p_name, d.d_name,c.p_rnum
+    from noti a, co_med b, patient c, doctor d
+    where a.co_no = b.co_no
+    and b.p_no = c.p_no
+    and a.reqd_id = d.d_id
+    and a.noti_no = #{notiNo}
+
+
+
+</select>
+ <!--협진  요청받은 의사들의 정보 -->
+<select id="noticeRequsetDoctors" resultType="doctorVO">
+
+    select
+    b.d_name, b.d_pic, c.ma_name,b.d_id
+    from noti a, doctor b, major c
+    where a.resd_id = b.d_id
+    and b.ma_no = c.ma_no
+    and a.co_no =  #{coNo}
+
+</select>
+
+
+
+<!-- 로그 기록 출력 -->
+<select id="selectAllLog" resultType="logHistoryVO">
+
+
+SELECT
+    hi_no,
+    co_no,
+    hi_content,
+    hi_cla,
+    hi_date,
+    hi_reference,
+    d_name
+FROM
+    log_history
+where co_no = #{coNo}
+
+</select>
+<!-- 진료예약 거절하기  -->
+<update id="rejectRegist" parameterType="map">
+ update task_approve set tn_noti = #{tnNoti} ,tn_yn='Y' where tn_no = #{tnNo}
+</update>
+<!-- 2로(거절) 바꿔주기! -->
+<update id = "rejectStatus" parameterType="map">
+update co_task set ta_status = 2 where ta_no = #{taNo}
+</update>
+<!-- 삭제인지 아닌지 알기! -->
+<select id="checkRemove" resultType="int" parameterType="str">
+ select tn_status
+    from task_approve
+    where ta_no = #{taNo}
+</select>
+<update id="updateCotaskStatus" parameterType="str">
+
+update co_task
+set ta_status= 4
+where ta_no = #{taNo}
+
+</update>
+<update id="updateApproveStatus" parameterType="str">
+update task_approve set tn_yn = 'Y' where ta_no = #{taNo}
+</update>
+<!-- 상세페이지 특이사항 전체 보기 -->
+<select id="detailAllIssue" resultType="issueVO">
+SELECT
+    a.iss_no,
+    a.iss_content,
+    c.d_name,
+    d.ma_name,
+    to_char(b.m_date,'YYYY-MM-DD')as m_date
+FROM
+    issue a, medi_reco b, doctor c, major d, com_reco e
+where a.iss_no = b.iss_no
+and b.d_id = c.d_id
+and c.ma_no = d.ma_no
+and b.m_no = e.m_no
+and e.co_no = #{coNo}
+order by b.m_date desc
+
+
+</select>
+
+
+<update id="updateNotiStatus" parameterType="map">
+update noti set response = #{response} where noti_no = #{notiNo}
+</update>
+
+<!-- 협진 수락하는 경우  -->
+<update id="updateCoDoctorStatus" parameterType="map">
+update co_doctor set paty_yn = 'Y'
+where co_no = #{coNo} and d_id= #{dId}
+</update>
+<select id="selectAllComment" resultType="myHistoryCommentVO">
+select e.p_name, a.d_name ,  d.co_disease,  TO_CHAR(b.com_date,'YYYY-MM-DD HH24:MI') as com_date, c.m_no, b.com_content, c.com_no
+   from  doctor a ,com_coment b, com_reco c, co_med d, patient e, medi_reco f
+   where a.d_id = b.d_id
+   and b.com_no = c.com_no
+   and c.co_no = d.co_no
+   and d.p_no = e.p_no
+   and c.m_no = f.m_no
+   and f.d_id = #{dId}
+</select>
+<!-- noti read 1변경 -->
+<update id="notiRead">
+UPDATE noti
+    SET
+        read = '0'
+WHERE
+    resd_id = #{resdId}
+    and noti_no = #{notiNo}
+
+
+</update>
+
+<!-- 자추찾는 협진리스트(상세페이지) -->
+<select id = "selectDetailCoFreq" resultType="coFreqVO" parameterType="str">
+select
+   a.co_no, TO_CHAR(a.cof_regdate,'YYYY-MM-DD') as cof_regdate ,
+   b.p_no,b.co_doc, (select d_name from doctor where d_id = b.co_doc) as d_name ,b.co_disease,c.p_name, c.p_sex, c.p_rnum, f.ma_name,
+    (select d_id from doctor where d_id = b.co_doc) as d_id
+   from co_freq a, co_med b ,patient c, co_doctor d, doctor e,major f
+   where  a.co_no = b.co_no
+   and b.p_no = c.p_no
+      and b.co_no = d.co_no
+      and e.d_id = d.d_id
+    and f.ma_no = e.ma_no
+      and b.co_ing_status = 1
+      and d.paty_yn = 'Y'
+    and d.d_id = #{dId}
+    and b.co_no in
+(SELECT
+    co_no
+FROM
+    co_freq
+where d_id = #{dId})
+
+
+</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

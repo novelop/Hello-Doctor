@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="History-Mapper">
+
+<!-- 진료히스토리 -->
+<select id="diagnosisList" resultType="HistoryVO"  parameterType="string">
+SELECT DISTINCT
+    a.p_no
+   ,b.m_no
+   , (
+        CASE
+            WHEN a.p_no IN (
+                SELECT
+                    c.p_no
+                FROM
+                    com_reco a
+                   ,co_med b
+                   ,patient c
+                   ,doctor d
+                WHERE
+                    a.co_no = b.co_no
+                    AND   b.p_no = c.p_no
+                    AND   d.d_id = b.co_doc
+            ) THEN '1'
+            ELSE '0'
+        END
+    )as c_reco
+   ,a.p_name
+   ,a.p_sex
+   ,substr(a.p_rnum,1,6) AS p_rnum
+   ,b.d_name
+   ,b.symptom
+   ,TO_CHAR(b.m_date,'yyyy-mm-dd hh24:mi') AS m_date
+
+FROM
+    patient a
+   ,medi_reco b
+   ,doctor c
+
+WHERE
+    b.d_id = c.d_id
+    AND   b.p_no = a.p_no
+    AND   b.d_name is not null
+    AND   b.d_id = #{d_id}
+
+ORDER BY
+    m_date DESC
+</select>
+<select id="diagnosisListCnt" resultType="int"  parameterType="string">
+	SELECT DISTINCT
+	   count(*)
+
+	FROM
+	    patient a
+	   ,medi_reco b
+	   ,doctor c
+
+	WHERE
+	    b.d_id = c.d_id
+	    AND   b.p_no = a.p_no
+
+	    AND   b.d_id =#{dId}
+	      <if test="startDate != null and startDate != ''">
+			and b.m_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                   AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	</if>
+    <if test="endDate != null and endDate != '' ">
+			and b.m_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                   AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	</if>
+	ORDER BY
+	    m_date DESC
+
+</select>
+<!-- 협진히스토리 -->
+<select id="CooperationList" resultType="HistoryVO">
+
+SELECT
+        c.co_no
+		,TO_CHAR(c.co_open_date,'YYYY-MM-DD') AS co_open_date
+		,TO_CHAR(c.end_date,'YYYY-MM-DD') AS end_date
+		,f.p_sex
+		,substr(f.p_rnum,1,6) as p_rnum
+		,c.end_reason
+		,c.co_ing_status
+		,c.co_release
+		,c.co_disease
+		,f.p_name
+		,a.d_name
+		,a.d_id
+		,d.ma_name
+		,c.co_doc
+		,a.d_pic
+	FROM
+		doctor a
+		,co_med c
+		,major d
+		,patient f
+        ,co_doctor g
+	WHERE
+        a.d_id = g.d_id
+		AND a.ma_no = d.ma_no
+		AND c.p_no = f.p_no
+        and c.co_no = g.co_no
+        and c.end_reason is not null
+        and c.co_no in
+        (select h.co_no from co_med h, co_doctor i
+        where h.co_no = i.co_no
+        and i.d_id = #{dId}
+        and i.paty_yn = 'Y'
+        and h.co_ing_status= '2')
+        and c.co_doc = #{dId}
+		ORDER BY
+		c.co_open_date DESC
+
+
+
+<!-- SELECT -->
+<!--     a.p_name -->
+<!--    ,a.p_sex -->
+<!--    ,substr(a.p_rnum,1,6) as p_rnum -->
+<!--    ,b.co_disease -->
+<!--    ,c.sub_d_name -->
+<!--    ,b.co_doc -->
+<!--    ,b.end_reason -->
+<!--    ,e.d_name -->
+<!--    ,d.ma_name -->
+<!--    ,TO_CHAR(b.co_start_date,'yyyy-mm-dd hh24:mi') AS co_start_date -->
+<!--    ,TO_CHAR(b.end_date,'yyyy-mm-dd hh24:mi') AS end_date -->
+<!-- FROM -->
+<!--     patient a -->
+<!--    ,co_med b -->
+<!--    ,co_sub_d c -->
+<!--    ,major d -->
+<!--    ,doctor e -->
+<!--    ,com_reco F -->
+<!-- WHERE -->
+<!--     a.p_no = b.p_no -->
+<!--     AND   e.d_id = b.co_doc -->
+<!--     AND   b.co_start_date is not null -->
+<!--     AND   b.end_date is not null -->
+<!--     AND   b.co_ing_status = '2' -->
+<!--     AND   d.ma_no = e.ma_no -->
+<!--     AND   b.co_no = F.co_no -->
+<!--     AND   b.co_no = c.co_no(+) -->
+<!--     AND   e.d_id = #{d_id} -->
+<!-- ORDER BY -->
+<!--     co_start_date DESC -->
+</select>
+
+<!-- 진료히스토리 자세히보기 -->
+<select id="selectDiagnosisHistory" resultType="HistoryVO">
+	SELECT
+	    a.m_no
+	   ,d.p_name
+	   ,d.p_sex
+	   ,substr(d.p_rnum,1,8) as p_rnum
+	   ,a.d_name
+	   ,b.sub_d_name
+	   ,c.d_name
+	   ,a.symptom
+	   ,TO_CHAR(a.m_date,'yyyy-mm-dd hh24:mi') AS m_date
+	FROM
+	    medi_reco a
+	   ,sub_d b
+	   ,doctor c
+	   ,patient d
+	WHERE
+	    c.d_id = a.d_id
+	    AND   a.p_no = d.p_no
+	    AND   a.m_no = b.m_no
+	    AND a.m_no =#{m_no}
+</select>
+
+<!-- 협진히스토리 자세히보기 -->
+<select id="selectCooperationHistory" resultType="HistoryVO">
+SELECT
+    a.p_name
+   ,a.p_sex
+   ,a.p_rnum
+   ,b.co_disease
+   ,c.sub_d_name
+   ,h.symptom
+   ,b.co_doc
+   ,e.d_name
+   ,d.ma_name
+   ,b.end_reason
+   ,TO_CHAR(b.co_start_date,'yyyy-mm-dd hh24:mi') AS co_start_date
+   ,TO_CHAR(b.end_date,'yyyy-mm-dd hh24:mi') AS end_date
+FROM
+    patient a
+   ,medi_reco H
+   ,co_med b
+   ,co_sub_d c
+   ,major d
+   ,doctor e
+   ,com_reco F
+WHERE
+	h.p_no = a.p_no
+    AND a.p_no = b.p_no
+    AND   e.d_id = b.co_doc
+    AND   d.ma_no = e.ma_no
+    AND   b.co_no = c.co_no
+    AND   b.co_no = F.co_no(+)
+    AND   f.co_no = #{coNo}
+<!-- SELECT -->
+<!--     a.p_name -->
+<!--    ,a.p_sex -->
+<!--    ,a.p_rnum -->
+<!--    ,b.co_disease -->
+<!--    ,c.sub_d_name -->
+<!--    ,b.co_doc -->
+<!--    ,e.d_name -->
+<!--    ,d.ma_name -->
+<!--    ,TO_CHAR(b.co_start_date,'yyyy-mm-dd hh24:mi') AS co_start_date -->
+<!-- FROM -->
+<!--     patient a -->
+<!--    ,co_med b -->
+<!--    ,co_sub_d c -->
+<!--    ,major d -->
+<!--    ,doctor e -->
+<!-- WHERE -->
+<!--     a.p_no = b.p_no -->
+<!--     AND   e.d_id = b.co_doc -->
+<!--     AND   d.ma_no = e.ma_no -->
+<!--     AND   b.co_no = c.co_no -->
+<!--     AND   b.com_no = #{com_no} -->
+</select>
+
+<select id="alarmListFirst" resultType="HistoryVO">
+SELECT DISTINCT
+    a.noti_no
+   ,a.resd_id
+   ,a.reqd_id
+   ,a.response
+   ,b.d_id
+   ,b.d_name
+   ,c.ma_name
+   ,a.read
+   ,TO_CHAR(a.noti_date,'YYYY-MM-DD') AS noti_date
+FROM
+    noti a
+   ,doctor b
+   ,major c
+   ,co_med d
+WHERE
+    c.ma_no = b.ma_no
+    AND   b.d_id = a.reqd_id
+    AND   d.co_doc = a.reqd_id
+    AND   a.co_no = d.co_no
+    AND   a.response='2'
+    AND   a.resd_id = #{dId}
+order by noti_date desc
+</select>
+
+<!--  받은요청에 대한 기록 -->
+<select id="sending" resultType="HistoryVO">
+SELECT
+    a.noti_no
+   ,a.resd_id
+   ,a.reqd_id
+   ,a.response
+   ,a.read
+   ,TO_CHAR(a.noti_date,'YYYY-MM-DD') AS noti_date
+   ,b.d_name
+   ,c.ma_name
+FROM
+    noti a
+   ,doctor b
+   ,major c
+WHERE
+    c.ma_no = b.ma_no
+    AND   a.reqd_id = b.d_id
+    AND   a.resd_id = #{dId}
+
+    order by noti_date desc
+</select>
+
+<select id="NoticeList" resultType="HistoryVO">
+SELECT
+	a.n_no
+   ,a.n_title
+   ,TO_CHAR(a.n_date,'YYYY-MM-DD') AS n_date
+   ,b.notice_yn
+   ,c.d_id
+FROM
+    notice a
+   ,noti_confirm b
+   ,doctor c
+WHERE
+    a.n_no = b.n_no
+    AND   b.d_id = c.d_id
+    AND   b.d_id=#{d_id}
+ORDER BY
+    n_date DESC
+
+</select>
+
+<update id="updateNotice" parameterType="HistoryVO">
+UPDATE noti_confirm
+    SET
+        notice_yn = '0'
+WHERE
+    notice_yn = '1'
+    AND   d_id = #{dId}
+    AND   n_no = #{nNo}
+</update>
+
+<update id="updateCooperation" parameterType="HistoryVO">
+UPDATE noti
+    SET
+        read = '0'
+WHERE
+    read = '1'
+    AND   noti_no = #{notiNo}
+
+</update>
+
+<select id="LikeCaseList" resultType="HistoryVO">
+SELECT
+    *
+FROM
+    (
+        SELECT
+            b.dis_no
+           ,a.d_name
+           ,b.dis_title
+           ,TO_CHAR(c.r_date,'yyyy-mm-dd hh24:mi') AS r_date
+        FROM
+            doctor a
+           ,case_dis b
+           ,dis_recom c
+        WHERE
+            a.d_id = c.d_id
+            AND   b.dis_no = c.dis_no
+            AND   b.del_yn ='N'
+            AND   a.d_id = #{d_id}
+        UNION
+        SELECT
+            d.dis_rply_no
+           ,a.d_name
+           ,b.dis_title
+           ,TO_CHAR(d.r_date,'yyyy-mm-dd hh24:mi') AS d_date
+        FROM
+            doctor a
+           ,case_dis b
+           ,dis_reply c
+           ,reply_recom d
+        WHERE
+            d.d_id = a.d_id
+            AND   c.dis_rply_no = d.dis_rply_no
+            AND   c.dis_no = b.dis_no
+            AND   a.d_id = #{d_id}
+
+    )
+	ORDER BY
+	    r_date DESC
+
+</select>
+<select id="LikeList" resultType="HistoryVO">
+SELECT
+    *
+FROM
+    (
+        SELECT
+            b.dis_no
+           ,a.d_name
+           ,b.dis_title
+           ,TO_CHAR(c.r_date,'yyyy-mm-dd hh24:mi') AS r_date
+        FROM
+            doctor a
+           ,case_dis b
+           ,dis_recom c
+        WHERE
+            a.d_id = c.d_id
+            AND   b.dis_no = c.dis_no
+            AND   b.del_yn = 'N'
+            AND   a.d_id = #{d_id}
+        UNION
+        SELECT
+            d.dis_rply_no
+           ,a.d_name
+           ,b.dis_title
+           ,TO_CHAR(d.r_date,'yyyy-mm-dd hh24:mi') AS d_date
+        FROM
+            doctor a
+           ,case_dis b
+           ,dis_reply c
+           ,reply_recom d
+        WHERE
+            d.d_id = a.d_id
+            AND   c.dis_rply_no = d.dis_rply_no
+            AND   c.dis_no = b.dis_no
+            AND   c.del_yn = 'N'
+            AND   a.d_id = #{d_id}
+        UNION
+        SELECT
+            a.o_no
+           ,b.d_name
+           ,a.o_title
+           ,TO_CHAR(c.r_date,'yyyy-mm-dd hh24:mi') AS r_date
+        FROM
+            drug_orderset a
+           ,doctor b
+           ,drug_recom c
+        WHERE
+            a.o_no = c.o_no
+            AND   b.d_id = c.d_id
+            AND   b.d_id = #{d_id}
+            AND   a.del_yn = 'N'
+    )
+ORDER BY
+    r_date DESC
+</select>
+
+<select id="commentList" resultType="HistoryVO">
+SELECT
+    *
+FROM
+    (
+        SELECT
+            (a.dis_rply_no) as log_num
+            ,a.dis_no as codeNum
+           ,c.dis_title
+           ,a.dis_content
+           ,TO_CHAR(a.dis_date,'YYYY-MM-DD') AS log_date
+
+        FROM
+            dis_reply a
+           ,doctor b
+           ,case_dis c
+        WHERE
+            a.d_id = b.d_id
+            AND   c.dis_no = a.dis_no
+            AND   b.d_id =  #{d_id}
+            AND   a.del_yn ='N'
+        UNION
+        SELECT
+            (a.fb_no) as log_num
+           ,a.o_no as codeNum
+           ,b.o_title
+           ,a.fb_result
+           ,TO_CHAR(a.fb_regdate,'YYYY-MM-DD') AS log_date
+
+
+        FROM
+            order_feed a
+           ,drug_orderset b
+           ,doctor c
+        WHERE
+            a.doc_id = c.d_id
+            AND   b.del_yn='N'
+            AND   a.o_no = b.o_no
+            AND   c.d_id =  #{d_id}
+    )
+ORDER BY
+    log_date DESC
+
+
+</select>
+
+
+<select id="NoticeBoard" resultType="HistoryVO">
+SELECT
+    a.n_no
+   ,a.n_title
+   ,a.admin_id
+   ,TO_CHAR(a.n_date,'YYYY-MM-DD') AS n_date
+   ,b.notice_yn
+   ,c.d_id
+FROM
+    notice a
+   ,noti_confirm b
+   ,doctor c
+WHERE
+    a.n_no = b.n_no
+    AND   b.d_id = c.d_id
+    AND   b.d_id = #{d_id}
+ORDER BY
+    n_date DESC
+</select>
+
+
+<select id="selectNotice" resultType="HistoryVO">
+SELECT
+	n_no
+    ,n_title
+   ,n_content
+   ,admin_id
+   ,TO_CHAR(n_date,'YYYY-MM-DD') AS n_date
+   ,pop_yn
+FROM
+    notice
+WHERE
+    n_no =  #{n_no}
+</select>
+
+<select id="logHistory" resultType="HistoryVO">
+SELECT
+    *
+FROM
+    (
+        SELECT
+            (a.dis_rply_no) as log_num
+           ,c.dis_title
+           ,a.dis_content
+           ,TO_CHAR(a.dis_date,'YYYY-MM-DD hh24:mi') AS log_date
+
+        FROM
+            dis_reply a
+           ,doctor b
+           ,case_dis c
+        WHERE
+            a.d_id = b.d_id
+            AND   c.dis_no = a.dis_no
+            AND   b.d_id = #{dId}
+        UNION
+        SELECT
+            (a.fb_no) as log_num
+           ,b.o_title
+           ,a.fb_result
+           ,TO_CHAR(a.fb_regdate,'YYYY-MM-DD hh24:mi') AS log_date
+
+
+        FROM
+            order_feed a
+           ,drug_orderset b
+           ,doctor c
+        WHERE
+            a.doc_id = c.d_id
+            AND   a.o_no = b.o_no
+            AND   c.d_id = #{dId}
+    )
+ORDER BY
+    log_date DESC
+
+</select>
+
+<!-- 환자명 주상병 부상병 주치의 협진 시작일 종료일 종료사유 -->
+<select id="AllCooperation" resultType="HistoryVO">
+SELECT
+	b.co_no
+   ,a.p_name
+   ,a.p_sex
+   ,substr(a.p_rnum,1,6) as p_rnum
+   ,b.co_disease
+   ,c.sub_d_name
+   ,b.co_doc
+   ,b.end_reason
+   ,e.d_name
+   ,d.ma_name
+   ,g.symptom
+   ,g.M_OPINION
+   ,TO_CHAR(b.co_start_date,'yyyy-mm-dd hh24:mi') AS co_start_date
+   ,TO_CHAR(b.end_date,'yyyy-mm-dd hh24:mi') AS end_date
+FROM
+    patient a
+   ,co_med b
+   ,co_sub_d c
+   ,major d
+   ,doctor e
+   ,com_reco F
+   ,medi_reco G
+WHERE
+    g.m_no = F.m_no
+    AND a.p_no = b.p_no
+    AND b.co_start_date is not null
+    AND b.end_date is not null
+    AND   e.d_id = b.co_doc
+    AND   d.ma_no = e.ma_no
+    AND   b.co_no = F.co_no
+    AND   b.co_no = c.co_no(+)
+    AND   e.d_id = #{dId}
+ORDER BY
+    co_start_date DESC
+
+
+</select>
+
+<select id="diagnosisHistory" resultType="HistoryVO"  parameterType="string">
+SELECT DISTINCT
+    a.p_no
+   ,b.m_no
+   , (
+        CASE
+            WHEN a.p_no IN (
+                SELECT
+                    c.p_no
+                FROM
+                    com_reco a
+                   ,co_med b
+                   ,patient c
+                   ,doctor d
+                WHERE
+                    a.co_no = b.co_no
+                    AND   b.p_no = c.p_no
+                    AND   d.d_id = b.co_doc
+            ) THEN '1'
+            ELSE '0'
+        END
+    )as c_reco
+   ,a.p_name
+   ,a.p_sex
+   ,substr(a.p_rnum,1,6) AS p_rnum
+   ,b.d_name
+   ,b.symptom
+   ,TO_CHAR(b.m_date,'yyyy-mm-dd hh24:mi') AS m_date
+
+FROM
+    patient a
+   ,medi_reco b
+   ,doctor c
+
+WHERE
+    b.d_id = c.d_id
+    AND   b.p_no = a.p_no
+
+    AND   b.d_id = #{dId}
+    <if test="startDate != null and startDate != ''">
+			and b.m_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                   AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	</if>
+    <if test="endDate != null and endDate != '' ">
+			and b.m_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                   AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
+	</if>
+
+ORDER BY
+    m_date DESC
+</select>
+
+<select id="loginlog" resultType="logVO">
+SELECT
+    d_id
+   ,ipaddress
+   ,TO_CHAR(indate,'yyyy-mm-dd hh24:mi') AS indate
+   ,log_cla
+   ,d_name
+FROM
+    login_log
+WHERE
+    d_id = #{dId}
+ORDER BY indate DESC
+</select>
+
+</mapper>

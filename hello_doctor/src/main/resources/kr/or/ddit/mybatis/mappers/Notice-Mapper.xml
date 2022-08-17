@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Notice-Mapper">
+
+	<sql id="userChoice">
+		<if test="userChoice == 'b'.toString()">
+
+		</if>
+		<if test="userChoice == 'p'.toString()">
+			and pop_yn = 'Y'
+		</if>
+		<if test="userChoice == 'f'.toString()">
+			and pick_yn = 'Y'
+		</if>
+	</sql>
+	<sql id="uc">
+		<if test="userChoice == 'b'.toString()">
+
+		</if>
+		<if test="userChoice == 'p'.toString()">
+			and pop_yn = 'Y'
+		</if>
+		<if test="userChoice == 'f'.toString()">
+			and pick_yn = 'Y'
+		</if>
+	</sql>
+	<select id="selectNoticeForPage" resultType="noticeVO">
+		select
+		    n_no
+		  , admin_id
+		  , n_title
+		  , n_content
+		  , to_char(n_date, 'YYYY-MM-DD hh:mm:ss')as n_date
+		  , del_yn
+		  , pick_yn
+		  , pop_yn
+		  , pop_period_start
+		  , pop_period_end
+		from
+    	  notice
+    	where del_yn = 'N'
+    	<include refid="userChoice"></include>
+		order by n_date desc
+	</select>
+
+	<select id="countNotice" resultType="int">
+	SELECT
+    COUNT(*)
+FROM
+    notice
+WHERE
+    del_yn = 'N'
+
+
+	</select>
+	<select id="countNoticeForPage" resultType="int">
+		select count(*) from notice where del_yn = 'N' <include refid="uc"></include>
+	</select>
+
+	<update id="insertNotice" parameterType="noticeVO">
+		insert into notice(
+	n_no
+    , admin_id
+    , n_title
+    , n_content
+    , n_date
+    , del_yn
+    , pick_yn
+    , pop_yn
+    , pop_period_start
+    , pop_period_end)
+    values(#{nNo}, #{adminId}, #{nTitle}, #{nContent}, sysdate, 'N', #{pickYn}, #{popYn}, to_date(#{popPeriodStart}, 'YYYY-MM-DD'), to_date(#{popPeriodEnd}, 'YYYY-MM-DD'))
+	</update>
+
+	<select id="noticeSeq" resultType="int">
+		select notice_seq.nextVal from dual
+	</select>
+
+	<select id="detailNotice" resultType="noticeVO" parameterType="string">
+		select
+		    n_no
+		  , admin_id
+		  , n_title
+		  , n_content
+		  , n_date
+		  , del_yn
+		  , pick_yn
+		  , pop_yn
+		  , pop_period_start
+		  , pop_period_end
+		from
+		    notice
+		where n_no = #{nNo}
+	</select>
+
+	<update id="deleteNotice" parameterType="string">
+		update notice set del_yn = 'Y' where n_no = #{nNo}
+	</update>
+
+	<update id="modifyNotice" parameterType="noticeVO">
+		update notice set admin_id = #{adminId}, n_title = #{nTitle}, n_content=#{nContent},
+		n_date = sysdate, del_yn = 'N', pick_yn = #{pickYn}, pop_yn = #{popYn}, pop_period_start = #{popPeriodStart}
+		, pop_period_end = #{popPeriodEnd}
+		where n_no = #{nNo}
+	</update>
+
+	<select id="popUpNotice" resultType="noticeVO">
+		<![CDATA[
+		select
+		    n_title,
+		    n_content,
+		    n_no,
+		    to_char(pop_period_start, 'YYYY-MM-DD')as pop_period_start,
+		    to_char(pop_period_end, 'YYYY-MM-DD')as pop_period_end
+
+		from
+			notice
+		where
+			pop_yn = 'Y'
+		and pop_period_start < sysdate
+		and sysdate < pop_period_end
+		and del_yn = 'N'
+		]]>
+	</select>
+
+	<select id="popUpNoticeByNo" parameterType="string" resultType="noticeVO">
+		select n_title, n_content, n_no from notice where n_no = #{nNo}
+	</select>
+
+	<select id="fixNotice" resultType="noticeVO">
+	select
+		n_title,
+		n_content,
+		n_no,
+		to_char(n_date, 'YYYY-MM-DD')as n_date
+	from notice
+	where pick_yn = 'Y'
+	and del_yn = 'N'
+	order by n_date desc
+	</select>
+
+	<select id="recentNotice" resultType="noticeVO">
+		select
+		    n_no
+		  , admin_id
+		  , n_title
+		  , n_content
+		  , to_char(n_date, 'YYYY-MM-DD')as n_date
+		  , del_yn
+		  , pick_yn
+		  , pop_yn
+		  , pop_period_start
+		  , pop_period_end
+		from
+    	  notice
+    	where del_yn = 'N'
+    	and n_date >= TO_CHAR(SYSDATE-7,'YYYYMMDD')
+		order by n_date desc
+	</select>
+</mapper>
+
+

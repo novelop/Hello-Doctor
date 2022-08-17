@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+<settings>
+    	<setting name="mapUnderscoreToCamelCase" value="true"/>
+    	<setting name="jdbcTypeForNull" value="VARCHAR" />
+	</settings>
+	<typeAliases>
+		<typeAlias type="java.lang.String" alias="str" />
+		<typeAlias type="java.lang.Integer" alias="int" />
+		<typeAlias type="kr.or.ddit.dto.MediRecoVO" alias="medirecoVO" />
+		<typeAlias type="kr.or.ddit.dto.PatientVO" alias="patientVO" />
+		<typeAlias type="kr.or.ddit.dto.ReservationVO" alias="reservationVO" />
+		<typeAlias type="kr.or.ddit.dto.CoTaskVO" alias="cotaskVO" />
+		<typeAlias type="kr.or.ddit.dto.MyDrugVO" alias="mydrugVO" />
+		<typeAlias type="kr.or.ddit.dto.MyOrderVO" alias="myorderVO" />
+		<typeAlias type="kr.or.ddit.dto.MyOrderListVO" alias="myorderlistVO" />
+		<typeAlias type="kr.or.ddit.dto.ChartFormVO" alias="chartformVO" />
+		<typeAlias type="kr.or.ddit.dto.DoctorVO" alias="doctorVO" />
+		<typeAlias type="kr.or.ddit.dto.CaseVO" alias="caseVO" />
+		<typeAlias type="kr.or.ddit.dto.CoMedVO" alias="comedVO" />
+		<typeAlias type="kr.or.ddit.dto.PrescriptVO" alias="prescriptVO" />
+		<typeAlias type="kr.or.ddit.dto.SubDVO" alias="subdVO" />
+		<typeAlias type="kr.or.ddit.dto.OrdersetVO" alias="ordersetVO" />
+		<typeAlias type="kr.or.ddit.dto.SubTaskVO" alias="subTaskVO" />
+		<typeAlias type="kr.or.ddit.dto.RecomVO" alias="recomVO"/>
+		<typeAlias type="kr.or.ddit.dto.MedPicVO" alias="medPicVO"/>
+		<typeAlias type="kr.or.ddit.dto.MedFileVO" alias="medFileVO"/>
+		<typeAlias type="kr.or.ddit.dto.MajorVO" alias="majorVO"/>
+		<typeAlias type="kr.or.ddit.dto.CoDoctorVO" alias="coDoctorVO"/>
+		<typeAlias type="kr.or.ddit.dto.CaseReplyVO" alias="caseReplyVO"/>
+		<typeAlias type="kr.or.ddit.dto.ReplyRecomVO" alias="replyRecomVO"/>
+		<typeAlias type="kr.or.ddit.dto.OrderSetShareVO" alias="orderSetShareVO"/>
+		<typeAlias type="kr.or.ddit.dto.SchedulerVO" alias="schedulerVO"/>
+		<typeAlias type="kr.or.ddit.dto.SchedulerVO2" alias="schedulerVO2"/>
+		<typeAlias type="kr.or.ddit.dto.ManagerDoctorListVO" alias="doctorListVO"/>
+		<typeAlias type="kr.or.ddit.command.CaseRegistCommand" alias="CaseRegistCommand"/>
+		<typeAlias type="kr.or.ddit.dto.AttachVO" alias="attachVO"/>
+		<typeAlias type="kr.or.ddit.dto.ComComentVO" alias="comComentVO"/>
+		<typeAlias type="kr.or.ddit.dto.LogHistoryVO" alias="logHistoryVO"/>
+		<typeAlias type="kr.or.ddit.dto.HistoryVO" alias="HistoryVO"/>
+		<typeAlias type="kr.or.ddit.dto.MedicineVO" alias="medicineVO"/>
+		<typeAlias type="kr.or.ddit.dto.UsedOrdersetVO" alias="usedOrdersetVO"/>
+		<typeAlias type="kr.or.ddit.dto.IssueReadynVO" alias="issueReadynVO"/>
+		<typeAlias type="kr.or.ddit.dto.CoworkerVO" alias="coworkerVO"/>
+		<typeAlias type="kr.or.ddit.dto.DocuOrderVO" alias="docuOrderVO"/>
+		<typeAlias type="kr.or.ddit.dto.ManagerNoticeVO" alias="noticeVO"/>
+		<typeAlias type="kr.or.ddit.dto.LogVO" alias="logVO"/>
+
+
+<!-- 태정 -->
+<typeAlias type="kr.or.ddit.dto.JoinCooperVO" alias="joinCooperVO" />
+<typeAlias type="kr.or.ddit.dto.IssueVO" alias="issueVO" />
+<typeAlias type="kr.or.ddit.dto.MyHistoryCommentVO" alias="myHistoryCommentVO" />
+<typeAlias type="kr.or.ddit.dto.NotiVO" alias="notiVO" />
+<typeAlias type="kr.or.ddit.dto.CoDocApproveVO" alias="coDocApproveVO"/>
+<typeAlias type="kr.or.ddit.dto.DidApproveVO" alias="didApproveVO"/>
+<typeAlias type="kr.or.ddit.dto.CoTaskASubVO" alias="coTaskASubVO"/>
+<typeAlias type="kr.or.ddit.dto.CoSubTaskVO" alias="coSubTaskVO"/>
+<typeAlias type="kr.or.ddit.dto.ReserveHistoryVO" alias="reserveHistoryVO"/>
+<typeAlias type="kr.or.ddit.dto.ComRecoVO" alias="comRecoVO"/>
+<typeAlias type="kr.or.ddit.dto.LastPrescriptVO" alias="lastPrescriptVO"/>
+<typeAlias type="kr.or.ddit.dto.MyIssueVO" alias="myIssueVO"/>
+<typeAlias type="kr.or.ddit.dto.CoDoctorListVO" alias="coDoctorListVO"/>
+<typeAlias type="kr.or.ddit.dto.LastChartFileVO" alias="lastChartFileVO"/>
+<typeAlias type="kr.or.ddit.dto.ChartPicFileVO" alias="chartPicFileVO"/>
+<typeAlias type="kr.or.ddit.dto.SelDocVO" alias="selDocVO"/>
+
+<typeAlias type="kr.or.ddit.dto.CaseFileVO" alias="fileVO"/>
+
+<typeAlias type="kr.or.ddit.dto.CoFreqVO" alias="coFreqVO"/>
+
+
+
+<typeAlias type="kr.or.ddit.command.InsertOrderSetCommand" alias="ordersetCommand"/>
+
+
+<!-- 의찬 -->
+<typeAlias type="kr.or.ddit.dto.MainVO" alias="mainVO"/>
+<typeAlias type="kr.or.ddit.dto.AdminVO" alias="adminVO"/>
+<typeAlias type="kr.or.ddit.dto.HospitalIpVO" alias="hospitalIpVO"/>
+<typeAlias type="kr.or.ddit.dto.docIpVO" alias="docipVO"/>
+
+
+
+	</typeAliases>
+</configuration>
+
+
+
+
+
+
+

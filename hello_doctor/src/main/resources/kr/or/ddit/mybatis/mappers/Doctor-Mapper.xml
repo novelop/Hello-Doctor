@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Doctor-Mapper">
+	<select id="doctorLogin" resultType="doctorVO"
+		parameterType="doctorVO">
+		select
+		a.d_id
+		,a.ma_no
+		,a.d_name
+		,a.pwd
+		,a.tel
+		,a.email
+		,a.status
+		,a.d_pic
+		,a.regdate
+		,a.account_status
+		,a.resident_num
+		,a.retiredate
+		,a.sus_startdate
+		,a.sus_enddate
+		,b.ma_name
+		,a.otp_co
+		,a.sm_name
+		,a.authority
+		,a.otp_check
+		from doctor a , major b
+		where a.ma_no = b.ma_no
+		and d_id = #{dId}
+	</select>
+
+	<select id="selectDoctorVO" resultType="doctorVO"
+		parameterType="str">
+		select
+		a.d_id
+		,a.ma_no
+		,a.d_name
+		,a.pwd
+		,a.tel
+		,a.email
+		,a.status
+		,a.d_pic
+		,a.regdate
+		,a.account_status
+		,a.resident_num
+		,a.retiredate
+		,a.sus_startdate
+		,a.sus_enddate
+		,b.ma_name
+		,a.otp_co
+		,a.sm_name
+		,a.otp_check
+		from doctor a , major b
+		where a.ma_no = b.ma_no
+		and d_id = #{dId}
+
+
+	</select>
+
+	<update id="profileChange" parameterType="doctorVO">
+		update doctor
+		set
+		status = #{status}
+		where
+		d_id =#{dId}
+	</update>
+	<select id="searchDoctorName" resultType="str">
+		select d_name
+		from doctor
+		where d_id = #{dId}
+	</select>
+	<select id="majorList" resultType="majorVO">
+		SELECT
+		ma_name,
+		ma_no
+		FROM
+		major
+		order by ma_name
+	</select>
+
+	<select id="majorDoctors" resultType="majorVO">
+		select a.ma_name, b.d_id, b.d_name, b.d_pic, b.sm_name
+		from major a, doctor b
+		where a.ma_no = b.ma_no
+		and a.ma_no = #{maNo}
+		and b.d_id != #{dId}
+	</select>
+	<select id="detailDoctor" resultType="majorVO">
+		select a.ma_name, b.d_id, b.d_name, b.d_pic, b.sm_name, b.status, b.tel
+		from major a, doctor b
+		where a.ma_no = b.ma_no
+		and b.d_id = #{doId}
+	</select>
+	<select id="coDoctor" resultType="coDoctorVO">
+	select a.end_date, b.p_name , a.co_disease   from co_med a, patient b
+where  a.p_no = b.p_no
+and a.end_date is not null
+and a.co_no in
+(select c.co_no from co_doctor c where c.d_id =#{dId}
+INTERSECT
+    select d.co_no from co_doctor d where d.d_id =#{doId}
+)
+	</select>
+
+	<update id="doctorStatusReset" parameterType="str">
+	update doctor
+    set status ='0'
+  where d_id=#{dId}
+	</update>
+
+	<update id="doctorStatusStart" parameterType="str">
+	update doctor
+    set status ='1'
+  where d_id=#{dId}
+	</update>
+
+	<select id="findId" resultType="str">
+		select d_id
+	      from doctor
+	     where resident_num=#{residentNum}
+           and d_name =#{dName}
+	</select>
+
+
+	<select id="findpass" resultType="str">
+		select pwd
+  		  from doctor
+         where resident_num=#{residentNum}
+           and d_name = #{dName}
+           and d_id = #{dId}
+	</select>
+
+	<select id="sendMail" resultType="str">
+		select email
+  		  from doctor
+         where resident_num=#{residentNum}
+           and d_name = #{dName}
+           and d_id = #{dId}
+	</select>
+
+
+	<update id="modifyPass">
+	update doctor
+	   set pwd = #{pwd}
+	 where d_id = #{dId}
+	</update>
+
+	<select id="securityLogin" resultType="doctorVO">
+			select
+		    d_id
+		   ,ma_no
+		   ,d_name
+		   ,pwd
+		   ,tel
+		   ,email
+		   ,status
+		   ,d_pic
+		   ,regdate
+		   ,account_status
+		   ,resident_num
+		   ,retiredate
+		   ,sus_startdate
+		   ,sus_enddate
+		   ,otp_qr
+		   ,otp_co
+		   ,d_office
+		   ,d_exam
+		   ,authority
+		   ,enabled
+		from
+		    doctor
+		where d_id=#{dId}
+	</select>
+
+	<select id="blockHospitalIp" resultType="hospitalIpVO">
+		select
+		    ip_no
+		   ,ip_room
+		  from
+   		   hospital_ip
+	</select>
+
+	<select id="allDoctor" resultType="map">
+	select d_id,pwd
+  	  from doctor
+
+
+	</select>
+	<select id="coworkerList" resultType="coworkerVO">
+
+
+SELECT
+    a.myd_id,
+    a.cod_id,
+    b.d_name,
+    b.d_pic,
+    c.ma_name
+FROM
+    coworker a, doctor b, major c
+where a.cod_id = b.d_id
+and b.ma_no = c.ma_no
+and a.myd_id = #{dId}
+
+	</select>
+<update id='addCoworker'>
+
+    INSERT INTO coworker (
+    myd_id,
+    cod_id
+) VALUES (
+    #{mydId},
+    #{codId}
+)
+
+
+
+</update>
+<update id="deleteCoworker">
+
+
+ DELETE FROM coworker
+WHERE
+    myd_id = #{mydId}
+    AND cod_id = #{codId}
+
+</update>
+<select id="selectAllDoctor" resultType="doctorVO">
+
+    SELECT
+    d_id,
+    ma_no,
+    d_name,
+    pwd,
+    tel,
+    email,
+    status,
+    d_pic,
+    regdate,
+    account_status,
+    resident_num,
+    retiredate,
+    sus_startdate,
+    sus_enddate,
+    otp_qr,
+    otp_co,
+    d_office,
+    d_exam,
+    authority,
+    enabled
+FROM
+    doctor
+</select>
+
+
+<update id="docinfomodify">
+update doctor
+   set d_name = #{dName},
+       sm_name = #{smName},
+       email=#{email}
+ where d_id = #{dId}
+
+</update>
+<update id="docinfoprofilemodify">
+update doctor
+   set d_pic = #{dPic}
+ where d_id = #{dId}
+
+</update>
+
+
+<update id="docpwdmodify">
+update doctor
+   set pwd = #{newpwd}
+ where d_id = #{dId}
+
+</update>
+
+
+<select id="checkpwd" resultType="String">
+select pwd
+  from doctor
+ where d_id=#{dId}
+</select>
+
+
+<update id="docloginmodify">
+update doctor
+   set otp_check = #{otpCheck}
+ where d_id = #{dId}
+
+</update>
+
+<update id="doctelmodify">
+update doctor
+   set tel = #{tel}
+ where d_id = #{dId}
+
+</update>
+
+
+<select id="docIp" resultType="String">
+select ip_no
+  from ip_doc
+ where d_id = #{dId}
+
+</select>
+
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

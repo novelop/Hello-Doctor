@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CaseReply-Mapper">
+	<sql id="search">
+		<if test="userFilter == 'f'.toString()">
+			order by dis_date desc
+		</if>
+		<if test="userFilter == 'b'.toString()">
+			order by recom desc
+		</if>
+	</sql>
+	<update id="registReply" parameterType="caseReplyVO">
+		insert into
+		dis_reply(dis_rply_no, dis_content, dis_date, dis_no, d_id, del_yn)
+		values(#{disRplyNo}, #{disContent}, sysdate, #{disNo}, #{dId}, 'N')
+	</update>
+
+	<select id="selectCaseReplySeqNextValue" resultType="int">
+		select
+		case_reply_seq.nextVal from dual
+	</select>
+
+	<select id="listReply" parameterType="string"
+		resultType="caseReplyVO">
+		select
+		a.dis_rply_no
+		, a.dis_content
+		, a.dis_date
+		, a.dis_no
+		, a.d_id
+		, a.del_yn
+		, b.d_name
+		, c.ma_name
+		,(select count(d.d_id) from reply_recom d where a.dis_rply_no =
+		d.dis_rply_no)as recom
+		,b.d_pic
+		from
+		dis_reply a, doctor b, major c
+		where del_yn = 'N'
+		and a.d_id = b.d_id
+		and b.ma_no = c.ma_no
+		and a.dis_no = #{disNo}
+		<include refid="search"></include>
+	</select>
+
+	<select id="countReply" resultType="int">
+		select count(*) from
+		dis_reply where del_yn = 'N' and dis_no = #{disNo}
+	</select>
+
+	<update id="updateReply" parameterType="caseReplyVO">
+		update dis_reply set
+		dis_content = #{disContent}
+		where dis_rply_no = #{disRplyNo}
+	</update>
+
+	<update id="deleteReply" parameterType="string">
+		update dis_reply set
+		del_yn = 'Y'
+		where dis_rply_no = #{disRplyNo}
+	</update>
+
+	<select id="caseRecomSelect" parameterType="replyRecomVO"
+		resultType="replyRecomVO">
+		select * from reply_recom where d_id = #{dId} and
+		dis_rply_no = #{disRplyNo}
+	</select>
+	<update id="caseRecomInsert" parameterType="replyRecomVO">
+		insert into
+		reply_recom(d_id, dis_rply_no,r_date) values(#{dId}, #{disRplyNo},sysdate)
+	</update>
+	<update id="caseRecomDelete" parameterType="replyRecomVO">
+		delete from
+		reply_recom where d_id = #{dId} and dis_rply_no = #{disRplyNo}
+	</update>
+	<select id="myClick" resultType="str"
+		parameterType="replyRecomVO">
+
+		select a.dis_rply_no
+		from reply_recom a
+		where a.d_id =#{dId}
+		and a.dis_rply_no =#{disRplyNo}
+
+		union all
+
+		select 'N' as myClick
+		from dual
+		where not exists(
+		select b.dis_rply_no
+		from reply_recom b
+		where b.d_id =#{dId}
+		and b.dis_rply_no =#{disRplyNo})
+
+
+	</select>
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Regist-Mapper">
+	<select id="registMajorList" resultType="str">
+		select ma_name
+  		from major
+		where ma_name like '%' || #{word} || '%'
+
+	</select>
+
+	<update id="insertDoctor">
+	insert into
+    doctor(d_id,
+           ma_no,
+           d_name,
+           pwd,
+           tel,
+           email,
+           status,
+           d_pic,
+           regdate,
+           account_status,
+           resident_num,
+           retiredate,
+           sus_startdate,
+           sus_enddate,
+           otp_qr,
+           otp_co,
+           authority,
+           otp_check,
+           sm_name)
+	values(#{dId},
+	       #{maNo},
+	       #{dName},
+	       #{pwd},
+	       #{tel},
+	       #{email},
+	       0,
+	       #{dPic},
+	       sysdate,
+	       '1',
+	       #{residentNum},
+	       '',
+	       '',
+	       '',
+	       #{otpQr},
+	       #{otpCo},
+	       '1',
+	       '2',
+	       #{smName})
+
+
+	</update>
+
+	<select id="maNameCheck" resultType="str">
+	select ma_no
+      from major
+     where ma_name=#{maName}
+
+	</select>
+
+
+</mapper>

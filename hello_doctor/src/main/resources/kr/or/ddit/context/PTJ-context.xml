@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+<!-- Repository -->
+
+
+<!-- DAO   -->
+<bean id="cooperMainDao" class="kr.or.ddit.dao.CooperMainDaoImpl"
+	p:session-ref="sqlSession"
+/>
+<bean id="cooperMyDao" class="kr.or.ddit.dao.CooperMyDaoImpl"
+	p:session-ref="sqlSession"
+/>
+
+
+
+<!-- Service -->
+<bean id="cooperMainService" class="kr.or.ddit.service.CooperMainServiceImpl"
+		p:cooperMainDao-ref="cooperMainDao"
+		p:cooperMyDao-ref="cooperMyDao"
+/>
+
+
+
+<bean id="cooperMyService" class="kr.or.ddit.service.CooperMyServiceImpl"
+		p:cooperMyDao-ref="cooperMyDao"
+/>
+
+
+
+</beans>

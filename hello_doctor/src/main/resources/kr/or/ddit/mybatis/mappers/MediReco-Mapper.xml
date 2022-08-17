@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MediReco-Mapper">
+	<select id="selectAllReco1" resultType="chartformVO"
+		parameterType="str">
+		select b.p_no as p_no, b.p_name as p_name, <![CDATA[to_char(a.rsv_day, 'YYYY-MM-DD HH24:Mi') ]]>as
+		reservedate ,a.rsv_no
+		,a.rsv_name as rsv_name ,substr(b.p_rnum,0,8) as
+		p_rnum, b.p_sex as p_sex
+		from reservation a, patient b
+		where a.p_no =
+		b.p_no
+		and a.d_id = #{dId}
+		and to_char(a.rsv_day, 'YYYY-MM-DD') =
+		to_char(sysdate, 'YYYY-MM-DD')
+		and a.rsv_status = 1
+	</select>
+
+	<select id="pastmedireco" resultType="medirecoVO">
+		select m_no, <![CDATA[to_char(m_date, 'YYYY-MM-DD HH24:Mi') ]]>as
+		m_date
+		from medi_reco
+		where p_no = #{p_no}
+		order by m_date desc
+	</select>
+	<select id="pastmedireco2" resultType="medirecoVO">
+		select a.m_no, <![CDATA[to_char(a.m_date, 'YYYY-MM-DD') ]]>as
+		m_date, a.d_name, b.d_name as do_name, c.ma_name
+		from medi_reco a,
+		doctor b , major c
+		where a.d_id = b.d_id
+		and b.ma_no = c.ma_no
+		and p_no =
+		#{p_no}
+		order by a.m_date desc
+	</select>
+	<select id="patientinfo" resultType="patientVO"
+		parameterType="str">
+		select
+		p_no,
+		p_name,
+		p_sex,
+		p_rnum,
+		p_tel,
+		p_address,
+		p_insurance
+		from
+		patient
+		where p_no = #{p_no}
+	</select>
+	<select id="checkpastco">
+		select co_no
+		from co_med
+		where p_no= #{p_no}
+		and
+		co_ing_status ="2"
+	</select>
+	<select id="searchdisease" resultType="str">
+		select de_ko
+		from disease
+		where trim(de_ko) like '%'|| trim(#{de_ko}) || '%'
+	</select>
+
+	<select id="searchmedicine" resultType="str">
+		select me_name
+		from
+		medicine
+		where trim(me_name) like '%'|| trim(#{me_name}) || '%'
+	</select>
+	<select id="docuinput" resultType="str">
+		select
+		do_input
+		from
+		docu_order
+		where doc_id = #{d_id}
+		and do_main = 'Y'
+
+
+	</select>
+	<select id="pastsymptom" resultType="medirecoVO">
+		select d_name, symptom,
+		to_char(m_date,'YYYY-MM-DD') as m_date
+		,p_no
+		from medi_reco
+		where m_no =
+		#{m_no}
+	</select>
+	<select id="gettemppdsSeq" resultType="int">
+		select temppds_seq.nextval
+		from dual
+	</select>
+	<update id="registTempPic" parameterType="str">
+		insert into temppds (
+		t_name
+		) values (
+		#{t_name}
+
+		)
+	</update>
+	<select id="getChartSeq" resultType="int">
+		select medireco_seq.nextval
+		from dual
+
+	</select>
+	<select id="getComRecoSeq" resultType="int">
+		select comreco_seq.nextval
+		from dual
+	</select>
+	<update id="registComReco">
+		INSERT INTO com_reco (
+		com_no,
+		m_no,
+		co_no,
+		com_date,
+		com_status,
+		ta_no
+		) VALUES (
+		#{comNo},
+		#{mNo},
+		#{coNo},
+		sysdate,
+		'1',
+		#{taNo}
+		)
+
+	</update>
+	<update id="registchart" parameterType="medirecoVO">
+		INSERT INTO medi_reco (
+		m_no,
+		d_id,
+		p_no,
+		<if test="issNo != null and issNo != ''">
+			iss_no,
+		</if>
+		symptom,
+		m_date,
+		d_name
+		) VALUES (
+
+		#{mNo},
+		#{dId},
+		#{pNo},
+		<if test="issNo != null and issNo != ''">
+			#{issNo},
+		</if>
+		#{symptom},
+		sysdate,
+		#{dName}
+		)
+
+	</update>
+	<select id="getSubDSeq" resultType="int">
+		select subd_seq.nextval from
+		dual
+	</select>
+	<select id="getIssueReSeq" resultType="int">
+		select issuere_seq.nextval
+		from dual
+	</select>
+	<update id="registSubD" parameterType="subdVO">
+		INSERT INTO sub_d (
+		sub_d_name,
+		m_no
+		) VALUES (
+		#{subDName},
+		#{mNo}
+		)
+	</update>
+	<select id="getIssueSeq" resultType="int">
+		select issue_seq.nextval
+		from dual
+	</select>
+
+	<update id="registIssue" parameterType="issueVO">
+		INSERT INTO issue (
+		iss_no,
+		iss_content
+		) VALUES (
+		#{issNo},
+		#{issContent}
+		)
+
+	</update>
+
+	<select id="getPrescriptSeq" resultType="int">
+		select
+		prescript_seq.nextval from dual
+	</select>
+	<update id="registPrescript" parameterType="prescriptVO">
+		INSERT INTO prescript
+		(
+		m_no,
+		pre_no,
+		cure_name,
+		p_quantity,
+		p_aday,
+		p_days
+		) VALUES (
+		#{mNo},
+		#{preNo},
+		#{cureName},
+	#{pQuantity},
+		#{pAday},
+		#{pDays}
+		)
+
+	</update>
+	<select id="getMediPictureSeq" resultType="int">
+		select
+		medipicture_seq.nextval from dual
+	</select>
+	<update id="registMedPic" parameterType="medPicVO">
+		INSERT INTO med_pic (
+		mp_no,
+		m_no,
+		mp_name
+		) VALUES (
+		#{mpNo},
+		#{mNo},
+
+		#{mpName}
+		)
+
+	</update>
+
+	<select id="getMediFileSeq" resultType="int">
+		select
+		medifile_seq.nextval from dual
+	</select>
+	<update id="registMedFile" parameterType="medFileVO">
+		INSERT INTO medi_file (
+		mf_no,
+		m_no,
+		mf_filename
+		) VALUES (
+		#{mfNo},
+		#{mNo},
+		#{mfFilename}
+		)
+	</update>
+	<select id="getAllPic" resultType="medPicVO">
+		select mp_no from med_pic
+		where m_no = #{mNo}
+	</select>
+	<select id="getAllFile" resultType="medFileVO">
+		select mf_no, mf_filename
+		from medi_file
+		where m_no = #{mNo}
+	</select>
+	<select id="getPic" resultType="str">
+		select mp_name from med_pic
+		where
+		mp_no = #{mpNo}
+	</select>
+	<select id="getFile" resultType="str">
+		select mf_filename from
+		medi_file
+		where mf_no = #{mfNo}
+	</select>
+	<select id="endCooperation" resultType="comedVO">
+		SELECT
+		co_no,
+		p_no,
+		co_name,
+		co_doc,
+		co_disease,
+		co_opinion,
+		co_open_date,
+		co_ing_status,
+		co_release,
+		to_char(co_start_date,'YYYY-MM-DD') as co_start_date,
+		co_importance,
+		end_reason,
+		end_opinion,
+		to_char(end_date, 'YYYY-MM-DD') as end_date
+		FROM
+		co_med
+		where p_no = #{pNo}
+		and co_ing_status = 2
+		order by
+		end_date desc
+
+	</select>
+	<select id="selectAllComReco" resultType="comRecoVO">
+		SELECT
+		com_no,
+		m_no,
+		co_no,
+		com_date,
+		com_status
+		FROM
+		com_reco
+		where co_no = #{coNo}
+
+	</select>
+	<select id="selectAllLogHistory" resultType="logHistoryVO">
+
+		SELECT
+		hi_no,
+		co_no,
+		hi_content,
+		hi_cla,
+		hi_date,
+		d_name
+		FROM
+		log_history
+		where co_no = #{coNo}
+
+	</select>
+	<select id="selectAllAttach" resultType="attachVO">
+
+		SELECT
+		a_no,
+		com_no,
+		a_filename,
+		a_filetype,
+		a_filepath,
+		a_regdate,
+		a_cla
+		FROM
+		attach
+		where com_no
+		= #{comNo}
+
+	</select>
+	<select id="selectAllComComent" resultType="comComentVO">
+		SELECT
+		com_co_no,
+		com_no,
+		d_id,
+		co_no,
+		com_content,
+		com_date,
+		del_yn
+		FROM
+		com_coment
+		where
+		com_no = #{comNo}
+
+	</select>
+	<update id="insertLogHistroy">
+		INSERT INTO log_history (
+		hi_no,
+		co_no,
+		hi_content,
+		hi_cla,
+		hi_date,
+		d_name
+		) VALUES (
+		#{hiNo},
+		#{coNo},
+		#{hiContent},
+		#{hiCla},
+		#{hiDate},
+		#{dName}
+		)
+
+	</update>
+	<update id="insertAttach">
+		INSERT INTO attach (
+		a_no,
+		com_no,
+		a_filename,
+		a_filetype,
+		a_filepath,
+		a_regdate,
+		a_cla
+		) VALUES (
+		#{aNo},
+		#{comNo},
+		#{aFilename},
+		#{aFiletype},
+		#{aFilepath},
+		#{aRegdate},
+		#{aCla}
+		)
+
+
+	</update>
+	<update id="insertComComent">
+		INSERT INTO com_coment (
+		com_co_no,
+		com_no,
+		d_id,
+		co_no,
+		com_content,
+		com_date,
+		del_yn
+		) VALUES (
+		#{comCoNo},
+		#{comNo},
+		#{dId},
+		#{coNo},
+		#{comContent},
+		#{comDate},
+		#{delYn}
+		)
+
+	</update>
+
+	<update id="updateOrderUse">
+
+		UPDATE my_order
+		SET
+		m_no = #{mNo}
+		WHERE
+		mo_no = #{moNo}
+
+
+	</update>
+	<update id="updateTaStatus">
+		UPDATE co_task
+		SET
+		reserv_yn = 'Y'
+		WHERE
+		ta_no = #{taNo}
+	</update>
+	<update id="updateRsvStatus">
+		UPDATE reservation
+		SET
+		rsv_status = 2
+		WHERE
+		rsv_no = #{rsvNo}
+
+	</update>
+	<update id="insertIssueRead" parameterType="issueReadynVO">
+		INSERT INTO issue_readyn (
+		iss_no,
+		d_id,
+		co_no,
+		iss_yn,
+		issre_no
+		) VALUES (
+		#{issNo},
+		#{dId},
+		#{coNo},
+		#{issYn},
+		#{issreNo}
+		)
+
+	</update>
+	<select id="selectAllOrder" resultType="docuOrderVO">
+SELECT
+    do_no,
+    doc_id,
+    do_name,
+    do_input,
+    do_main
+FROM
+    docu_order
+where doc_id = #{dId}
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+

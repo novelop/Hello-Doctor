@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+<!-- DAO -->
+<bean id="comedDAO" class="kr.or.ddit.dao.CoMedDAOImpl" p:session-ref="sqlSession"/>
+<bean id="schedulerDAO" class="kr.or.ddit.dao.SchedulerDAOImpl" p:session-ref="sqlSession"/>
+<bean id="historyDAO" class="kr.or.ddit.dao.HistoryDAOImpl"  p:session-ref="sqlSession"/>
+
+<!-- Service -->
+<bean id="comedService" class="kr.or.ddit.service.CoMedServiceImpl"
+p:co_medDAO-ref="comedDAO"
+p:mediRecoDAO-ref="mediRecodao"
+/>
+<bean id="schedulerService" class="kr.or.ddit.service.SchedulerServiceImpl"
+ p:schedulerDao-ref="schedulerDAO"
+ p:mediRecoDAO-ref="mediRecodao"
+ p:coTaskDAO-ref="coTaskdao"
+/>
+
+<bean id="historySerivce" class="kr.or.ddit.service.HistoryServiceImpl"
+p:historyDAO-ref="historyDAO"
+p:casedao-ref="case_DAO"
+p:cooperMyDao-ref="cooperMyDao"/>
+</beans>

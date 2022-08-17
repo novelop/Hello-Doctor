@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CoTask-Mapper">
+	<select id="selectAllReco2" resultType="chartformVO"
+		parameterType="str">
+		select a.ta_no as ta_no, a.co_no as co_no, c.p_no as p_no,c.p_name as
+		p_name, <![CDATA[ to_char(a.ta_date, 'YYYY-MM-DD HH24:Mi') ]]>
+		as reservedate,
+		substr(c.p_rnum,0,8) as p_rnum, a.ta_name as rsv_name, a.ta_content as ta_content, c.p_sex
+		as p_sex
+		from co_task a, co_med b, patient c
+		where a.co_no = b.co_no
+		and b.p_no = c.p_no
+		and a.d_id = #{dId}
+		and to_char(a.ta_date, 'YYYY-MM-DD') = to_char(sysdate, 'YYYY-MM-DD')
+		and a.ta_status = 1
+		and a.reserv_yn = 'N'
+	</select>
+	<select id="mycotask" resultType="cotaskVO">
+		  select
+		a.ta_no,
+		a.co_no,
+		a.d_id,
+		a.ta_name,
+		a.ta_content,
+		a.ta_date,
+		a.ta_status,
+		a.reserv_yn,
+        b.co_doc,
+        c.d_name
+		from
+		co_task a, co_med b, doctor c
+		where a.co_no = b.co_no
+		and a.d_id = c.d_id
+        and ta_no = #{taNo}
+	</select>
+	<select id="mySubCoTask" resultType="subTaskVO">
+		SELECT
+		sub_no,
+		ta_no,
+		sub_name,
+		sub_date,
+		complete_yn,
+		l_file,
+		l_path,
+		l_type,
+		end_day,
+		start_day,
+		color
+		FROM
+		sub_task
+		where ta_no = #{taNo}
+
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

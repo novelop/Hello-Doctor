@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OurDrug-Mapper">
+<sql id="search">
+		<if test="searchType == 'm'.toString()">
+		 and me_name
+		</if>
+		<if test="searchType == 'c'.toString()">
+			 and me_no
+		</if>
+		<if test="keyword !=null">
+		 like '%'||#{keyword}||'%'
+		</if>
+
+	</sql>
+
+
+
+<select id="overDose" resultType="int" >
+		select me_limit
+		from medicine
+		where me_name =
+		#{drugNm}
+</select>
+<select id="selectAllMedicine" resultType="medicineVO">
+SELECT
+    me_name,
+    me_no,
+    me_company,
+    me_code,
+    me_permitdate,
+    me_modidate,
+    me_limit,
+    exist_yn,
+    me_useage,
+    me_inserance
+FROM
+    medicine
+where me_name is not null
+<include refid="search" />
+order by me_permitdate desc
+</select>
+
+<select id="selectAllMedicineCount" resultType="int">
+SELECT
+			count(*)
+FROM
+    medicine
+where me_name is not null
+<include refid="search" />
+order by me_permitdate desc
+
+</select>
+<update id="modifyY">
+update medicine set exist_yn = 'Y' where me_no = #{meNo}
+
+</update>
+<update id="modifyN">
+
+update medicine set exist_yn = 'N' where me_no = #{meNo}
+</update>
+<update id="modifyMedicine" parameterType="map">
+
+update medicine 
+   set ME_NAME = #{meName},
+   	   ME_COMPANY = #{meCompany},
+   	   ME_MODIDATE = #{meModidate},
+   	   UPDATE_DATE= sysdate
+where me_no = #{meNo}
+
+</update>
+
+<update id="updateModiDate">
+
+update medi_modidate set MODIDATE = sysdate
+</update>
+
+<select id="selectUpdateMedicine" resultType="medicineVO">
+select
+     me_name
+    , me_no
+    , me_company
+    , me_code
+    , me_permitdate
+    , me_modidate
+    , me_limit
+    , exist_yn
+    , me_useage
+    , me_inserance
+    ,to_char(update_date,'YYYY-MM-DD') as update_date
+from 
+    medicine
+where 
+    update_date = (select max(update_date) from medicine)
+</select>
+
+<select id="updateMeditotalCount" resultType="int">
+select count(*) from(
+select
+     me_name
+    , me_no
+    , me_company
+    , me_code
+    , me_permitdate
+    , me_modidate
+    , me_limit
+    , exist_yn
+    , me_useage
+    , me_inserance
+    ,to_char(update_date,'YYYY-MM-DD') as update_date
+from 
+    medicine
+where 
+    update_date = (select max(update_date) from medicine))
+</select>
+
+<select id="selectModiDate" resultType="string">
+select modidate from medi_modidate 
+
+</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

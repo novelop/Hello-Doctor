@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+
+	<!-- summernote Image Path -->
+
+
+	<!-- member.picture -->
+
+
+	<!-- file upload -->
+
+	<!-- Repository -->
+
+
+	<!-- DAOBean -->
+	<bean id="doctorDAO" class="kr.or.ddit.dao.DoctorDAOImpl"
+		p:session-ref="sqlSession"
+	/>
+	<bean id="mainIssueDAO" class="kr.or.ddit.dao.MainIssueDAOImpl"
+		p:session-ref="sqlSession"/>
+
+	<bean id="mainComRecoDAO" class="kr.or.ddit.dao.MainComRecoDAOImpl"
+		p:session-ref="sqlSession"/>
+	<bean id="adminDAO" class="kr.or.ddit.dao.AdminDAOImpl"
+	    p:session-ref="sqlSession"/>
+
+	<bean id="registDAO" class="kr.or.ddit.dao.RegistDAOImpl"
+	      p:session-ref="sqlSession"/>
+
+	<bean id="loginSearchDoctorDAO" class="kr.or.ddit.dao.LoginSearchDoctorDAOImpl"
+	      p:session-ref="sqlSession"
+	      />
+	<bean id="hospitalIpDAO" class="kr.or.ddit.dao.HospitalIpDAOImpl"
+	      p:session-ref="sqlSession"/>
+
+
+	<bean id="mainDAO" class="kr.or.ddit.dao.MainDAOImpl"
+	      p:session-ref="sqlSession"/>
+
+
+
+
+	<!-- Service -->
+	<bean id="doctorService" class="kr.or.ddit.service.DoctorServiceImpl"
+		p:doctorDAO-ref="doctorDAO"
+	/>
+	<bean id="mainIssueService" class="kr.or.ddit.service.MainIssueServiceImpl"
+		  p:issuedao-ref="mainIssueDAO"/>
+	<bean id="mainComRecoService" class="kr.or.ddit.service.MainComRecoServiceImpl"
+		p:comrecodao-ref="mainComRecoDAO"/>
+
+	<bean id="adminService" class="kr.or.ddit.service.AdminServiceImpl"
+		  p:admindao-ref="adminDAO"/>
+
+	<bean id="registService" class="kr.or.ddit.service.RegistServiceImpl"
+	      p:registDao-ref="registDAO"/>
+	<bean id="loginSearchDoctorService" class="kr.or.ddit.service.LoginSearchDoctorServiceImpl"
+	      p:loginSearchDoctorDAO-ref="loginSearchDoctorDAO"
+	      p:doctorDAO-ref="doctorDAO"
+	      />
+	<bean id="hospitalService" class="kr.or.ddit.service.HospitalServiceImpl"
+	      p:hospitalIpDAO-ref="hospitalIpDAO"/>
+
+	<bean id="mainService" class="kr.or.ddit.service.MainServiceImpl"
+	      p:maindao-ref="mainDAO"
+	      p:mediRecodao-ref="mediRecodao"
+	      p:myOrderdao-ref="myOrderdao"
+	      p:cooperMyDao-ref="cooperMyDao"
+	      p:schedulerDao-ref="schedulerDAO"
+	      />
+
+
+
+	<!-- Security Service -->
+	<bean id="customAuthenticationProvider" class="kr.or.ddit.security.CustomAuthenticationProvider"
+	      p:loginSearchDoctorService-ref="loginSearchDoctorService"
+	      	      />
+
+</beans>

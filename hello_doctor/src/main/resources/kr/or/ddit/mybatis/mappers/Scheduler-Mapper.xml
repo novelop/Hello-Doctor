@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Scheduler-Mapper">
+
+<!-- 예약 환자의 협진 코드  -->
+<select id="selectAllcoNo" resultType="str">
+	select co_no
+	from co_doctor
+	where d_id = #{dId}
+</select>
+
+<!-- 스케줄러에 출력한 정보 출력 -->
+<select id="selectAllTask" resultType="schedulerVO">
+ select
+    c.p_name
+	, a.ta_no
+	, a.ta_name
+	, to_char(a.ta_date, 'YYYY-MM-DD HH24:MI') as starttime
+	, to_char(a.ta_date +30/(24*60) , 'YYYY-MM-DD HH24:MI') as endtime
+	from co_task a, co_med b, patient c
+	where a.co_no = b.co_no
+	and b.p_no = c.p_no
+	and a.co_no = #{coNo}
+	and to_char(a.ta_date, 'YYYY-MM-DD') >= to_char(sysdate, 'YYYY-MM-DD')
+	and a.ta_status =  1
+	and a.d_id = #{dId}
+</select>
+<select id="Cooperation" resultType="schedulerVO">
+	SELECT
+	    a.ta_no
+	   ,a.ta_name
+	   ,TO_CHAR(a.ta_date,'YYYY-MM-DD hh:mm') AS ta_date
+	   ,b.d_id
+	   ,b.d_name
+	FROM
+	    co_task a
+	   ,doctor b
+	WHERE
+	    a.d_id = b.d_id
+	    and a.reserv_yn='Y'
+</select>
+
+<select id="CooperationMine" parameterType="String">
+	SELECT DISTINCT
+	    ( a.ta_no ) AS ta_no
+	   ,a.co_no
+	   ,a.d_id
+	   ,b.d_name
+	   ,e.p_name
+	   ,substr(e.p_rnum,0,8) AS p_rnum
+	   ,e.p_sex
+	   ,TO_CHAR(a.ta_date,'YYYY-MM-DD hh:mm:ss') AS ta_date
+	   ,a.ta_name
+	FROM
+	    co_task a
+	   ,doctor b
+	   ,co_doctor c
+	   ,co_med d
+	   ,patient e
+	WHERE
+	    a.d_id = b.d_id
+	    AND   b.d_id = c.d_id
+	    AND   d.p_no = e.p_no
+	    AND   a.co_no = d.co_no
+	    AND   a.reserv_yn='Y'
+	    AND   a.d_id = #{d_id}
+	ORDER BY
+	    ta_date
+</select>
+
+
+<select id="TodayList" resultType="schedulerVO">
+	select distinct(a.rsv_no) as rsv_no,
+	to_char(a.rsv_day,'YYYY-MM-DD hh:mm')as rsv_day,
+	a.rsv_day,
+	a.rsv_name,
+	a.p_no, a.d_id,
+	b.d_name,
+	substr(c.p_rnum,0,8) as p_rnum,
+	c.p_sex
+	from reservation A, doctor B, patient C
+	where a.p_no=c.p_no
+	and a.d_id= b.d_id
+	and to_char(a.rsv_day, 'YYYY-MM-DD') = to_char(sysdate, 'YYYY-MM-DD')
+	and a.d_id=#{d_id}
+	order by a.rsv_day
+</select>
+
+<select id="TodayCooperation" resultType="schedulerVO">
+	select distinct (a.ta_no) as ta_no,
+	a.co_no,
+	a.d_id,
+	b.d_name,
+	e.p_name,
+	substr(e.p_rnum,0,8) as p_rnum,
+	e.p_sex,
+	to_char(a.ta_date,'YYYY-MM-DD hh:mm')as rsvDay,
+	a.ta_name
+	from co_task A, doctor B, co_doctor C, co_med D, patient E
+	where a.d_id=b.d_id
+	and b.d_id=c.d_id
+	and d.p_no = e.p_no
+	and a.co_no = d.co_no
+	and to_char(a.ta_date, 'YYYY-MM-DD') = to_char(sysdate, 'YYYY-MM-DD')
+	and a.d_id=#{d_id}
+	order by ta_date
+</select>
+
+<select id="deleteCooperation" resultType="schedulerVO" >
+	UPDATE co_task
+	SET
+	    reserv_yn = 'N'
+	WHERE
+	    ta_no = #{ta_no}
+</select>
+<select id="selectbox" resultType="comedVO">
+	 select b.co_no, b.co_disease, c.p_name, b.co_doc
+	from co_doctor a, co_med b, patient c
+	where b.p_no = c.p_no
+    and a.co_no = b.co_no
+	and a.d_id = #{dId}
+	and a.paty_yn ='Y'
+	and b.co_ing_status = 1
+
+
+</select>
+<select id="searchselectbox" resultType="comedVO">
+	 select b.co_no, b.co_disease, c.p_name, b.co_doc
+	from co_doctor a, co_med b, patient c
+	where b.p_no = c.p_no
+    and a.co_no = b.co_no
+	and a.d_id = #{dId}
+	and a.paty_yn ='Y'
+	and b.co_ing_status = 1
+	and trim(p_name) like '%'|| trim(#{pName}) || '%'
+
+</select>
+<select id="selectCoDoctor" resultType="str">
+	select d_id
+	from co_doctor
+	where co_no = #{coNo}
+</select>
+<select id="selectCoScheduler" resultType="schedulerVO2">
+	select
+    c.p_name
+	, a.ta_no
+	, d.d_name
+	, a.ta_name
+	, a.ta_content
+	, to_char(a.ta_date, 'YYYY-MM-DD HH24:MI') as starttime
+	, to_char(a.ta_date +30/(24*60) , 'YYYY-MM-DD HH24:MI') as endtime
+	, e.ma_name
+	, d.d_id
+	from co_task a, co_med b, patient c,doctor d,major e
+	where a.co_no = b.co_no
+	and b.p_no = c.p_no
+	and a.d_id = d.d_id
+	and d.ma_no = e.ma_no
+	and a.co_no = #{coNo}
+	and d.d_id = #{dId}
+	and to_char(a.ta_date, 'YYYY-MM-DD') >= to_char(sysdate, 'YYYY-MM-DD')
+	and a.ta_status = 1
+	order by a.ta_date
+</select>
+
+</mapper>

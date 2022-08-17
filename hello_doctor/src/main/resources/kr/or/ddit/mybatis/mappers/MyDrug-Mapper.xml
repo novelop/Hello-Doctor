@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyDrug-Mapper">
+
+	<sql id="search">
+		<if test="keyword !=null and !keyword.equals('')">
+			and o_dname like '%'||#{keyword}||'%'
+		</if>
+
+
+
+
+
+	</sql>
+
+
+
+	<select id="orderdruglist" resultType="ordersetVO">
+
+		select o_drug, quantity, dg_aday, dg_days
+		from my_drug
+		where mo_no = #{moNo}
+
+
+	</select>
+		<select id="pastdrug" resultType="prescriptVO">
+		select
+    cure_name,
+    p_quantity,
+    p_aday,
+    p_days
+	from  prescript
+    where m_no = #{mNo}
+
+
+		 </select>
+		 <select id="pastsubD" resultType="subDVO">
+			select sub_d_name
+			from sub_d
+			where m_no = #{mNo}
+		 </select>
+		 <select id="durCheck" resultType="str">
+		select drug_nm
+		from dur
+		where drug_nm = #{drugNm}
+
+		union all
+
+		select '0' as drug_nm
+		from dual
+		where not exists(
+		select drug_nm
+		from dur
+		where drug_nm = #{drugNm}
+		)
+		 </select>
+
+ <select id="myOrderList" resultType="myorderVO">
+	SELECT
+	    mo_no,
+	    doc_id,
+	    o_dname,
+	    o_cla,
+	    o_noti,
+	    o_title,
+	    o_target,
+	    o_regdate,
+	    o_caution,
+	    o_result,
+	    del_yn
+	FROM
+	    my_order
+	 where doc_id = #{dId}
+	   and del_yn = 'N'
+	<include refid="search"></include>
+	<choose>
+		    <when test="searchType == 'sta'.toString()">
+		    	order by o_result  asc
+		    </when>
+		    <when test="searchType == 'da'.toString()">
+		   	 	order by o_regdate desc
+		    </when>
+		    <when test="searchType == 'dd'.toString()">
+		    	order by o_regdate asc
+			</when>
+		    <otherwise>order by o_regdate desc</otherwise>
+		</choose>
+
+ </select>
+
+ <select id="myOrderListCount" resultType="int">
+		select count(*)
+		    	 from (
+		SELECT
+		    mo_no,
+		    doc_id,
+		    o_dname,
+		    o_cla,
+		    o_noti,
+	    	o_title,
+		    o_target,
+		    o_regdate,
+		    o_caution,
+		    o_result,
+		    del_yn
+		FROM
+		    my_order
+		 where doc_id = #{dId}
+		    and del_yn = 'N'
+		<include refid="search"></include>
+		)
+ </select>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

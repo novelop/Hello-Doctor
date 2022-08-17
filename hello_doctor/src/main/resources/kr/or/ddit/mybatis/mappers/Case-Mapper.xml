@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Case-Mapper">
+
+
+	<sql id="search">
+		<if test="searchType == 't'.toString()">
+			and dis_title like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'd'.toString()">
+			and dis_d_name like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'w'.toString()">
+			and d_name like '%'||#{keyword}||'%'
+		</if>
+
+		<if test="userFilter == 'l'.toString()">
+			order by dis_cnt desc
+		</if>
+		<if test="userFilter == 'r'.toString()">
+			order by dis_date desc
+		</if>
+		<if test="userFilter == 'b'.toString()">
+			order by recom desc
+		</if>
+
+
+
+	</sql>
+
+	<select id="selectSearchCaseList" resultType="caseVO" >
+		select
+		a.dis_no,
+		a.d_id,
+		a.dis_title,
+		a.dis_content,
+		to_char(a.dis_date, 'YYYY-MM-DD')as dis_date,
+		a.dis_cnt,
+		a.del_yn,
+		a.dis_d_name,
+		a.dis_sex,
+		a.dis_class,
+		c.ma_name,
+		b.d_name,
+		(select count(d.d_id) from dis_recom d where d.dis_no = a.dis_no) as recom,
+		(select count(e.d_id) from dis_reply e where e.dis_no = a.dis_no) as reply,
+		(select f.sub_d_name from dis_sub_d f where f.dis_no = a.dis_no) as subDName
+		from
+		case_dis a, doctor b, major c
+		where a.d_id = b.d_id
+		and b.ma_no = c.ma_no
+		and a.del_yn = 'N'
+		<if test="userChoice == 'q'.toString()">
+		<!-- 	<if test="dId != NULL and dId != ''"/> -->
+		and a.d_id = #{dId}
+		</if>
+		<if test="userChoice == 't'.toString()">
+			<!-- <if test="maName != NULL and maName != ''"/> -->
+		and c.ma_name = #{maName}
+
+		</if>
+		<include refid="search"></include>
+
+	</select>
+
+	<select id="selectSearchCaseListCount" resultType="int">
+		select count(*)
+    	 from (select
+		a.dis_no as adis_no,
+		a.d_id as ad_id,
+		a.dis_title,
+		a.dis_content,
+		to_char(a.dis_date, 'YYYY-MM-DD HH:MI:SS')as dis_date,
+		a.dis_cnt,
+		a.del_yn,
+		a.dis_d_name,
+		a.dis_sex,
+		a.dis_class,
+		c.ma_name as cma_name,
+		b.d_name,
+		(select count(d.d_id) from dis_recom d, case_dis a  where d.dis_no = a.dis_no) as recom,
+		(select count(e.d_id) from dis_reply e where e.dis_no = a.dis_no) as reply
+		from
+		case_dis a, doctor b, major c
+		where a.d_id = b.d_id
+		and b.ma_no = c.ma_no
+		and a.del_yn = 'N') a where a.adis_no is not null
+		<if test="userChoice == 'q'.toString()">
+			<!-- <if test="dId != NULL and dId != ''"/> -->
+		and a.ad_id = #{dId}
+		</if>
+		<if test="userChoice == 't'.toString()">
+			<!-- <if test="maName != NULL and maName != ''"/> -->
+		and a.cma_name = #{maName}
+		</if>
+		<include refid="search" />
+
+	</select>
+
+	<select id="selectCase" resultType="caseVO">
+		select
+		a.dis_no,
+		a.d_id,
+		a.dis_title,
+		a.dis_content,
+		to_char(a.dis_date, 'YYYY-MM-DD HH:MI:SS')as dis_date,
+		a.dis_cnt,
+		a.del_yn,
+		a.dis_d_name,
+		a.dis_sex,
+		a.dis_class,
+		c.ma_name,
+		(select count(d.d_id) from dis_recom d where d.dis_no = a.dis_no) as recom
+		from
+		case_dis a, doctor b, major c
+		where a.d_id = b.d_id
+		and b.ma_no = c.ma_no
+
+		order by dis_date
+	</select>
+
+	<update id="insertCase" parameterType="caseVO">
+		insert into
+		case_dis(dis_no, d_id, dis_title, dis_content, dis_d_name, dis_sex,
+		dis_class, dis_date, dis_cnt, del_yn)
+		values(#{disNo}, #{dId},
+		#{disTitle}, #{disContent}, #{disDName}, #{disSex}, #{disClass},
+		sysdate, 0, 'N')
+	</update>
+
+	<update id="insertSub" parameterType="caseVO">
+		insert into
+		dis_sub_d(sub_d_name, dis_no) values(#{subDName}, #{disNo})
+	</update>
+
+	<select id="selectCaseSeqNextValue" resultType="int">
+		select
+		case_seq.nextVal from dual
+	</select>
+
+	<select id="selectCaseByNo" resultType="CaseRegistCommand" parameterType="string">
+		select
+		a.dis_no,
+		a.d_id,
+		a.dis_title,
+		a.dis_content,
+		to_char(a.dis_date, 'YYYY-MM-DD HH:MI:SS')as dis_date,
+		a.dis_cnt,
+		a.del_yn,
+		a.dis_d_name,
+		a.dis_sex,
+		a.dis_class,
+		b.ma_name,
+		d.sub_d_name,
+		c.d_name,
+		c.d_pic,
+        (select count(e.d_id) from dis_recom e where e.dis_no = a.dis_no) as recom
+		from
+		case_dis a, major b, doctor c, dis_sub_d d
+		where
+		a.d_id = c.d_id
+		and b.ma_no = c.ma_no
+		and a.dis_no = d.dis_no
+		and a.dis_no = #{disNo}
+	</select>
+
+	<update id="increaseViewCnt" parameterType="string">
+		update case_dis set
+		dis_cnt = dis_cnt + 1
+		where dis_no = #{disNo}
+	</update>
+
+	<update id="deleteCase" parameterType="string">
+		update case_dis set del_yn
+		= 'Y'
+		where dis_no = #{disNo}
+	</update>
+
+	<update id="updateCase" parameterType="CaseRegistCommand">
+		update case_dis set
+		dis_title = #{disTitle}, dis_content = #{disContent}, dis_d_name =
+		#{disDName}, dis_sex = #{disSex}, dis_class = #{disClass}
+		where
+		dis_no = #{disNo}
+	</update>
+
+	<update id="updateSubCase" parameterType="CaseRegistCommand">
+		update dis_sub_d set
+		sub_d_name = #{subDName} where dis_no = #{disNo}
+	</update>
+
+	<select id="mainBottomShow" resultType="caseVO">
+		<![CDATA[
+		select * from(
+			select
+				a.dis_no,
+				a.d_id,
+				a.dis_title,
+				a.dis_content,
+				to_char(a.dis_date, 'YYYY-MM-DD HH:MI:SS')as dis_date,
+				a.dis_cnt,
+				a.del_yn,
+				a.dis_d_name,
+				a.dis_sex,
+				a.dis_class,
+				c.ma_name,
+				b.d_name,
+				(select count(d.d_id) from dis_recom d where d.dis_no = a.dis_no) as recom
+			from
+				case_dis a, doctor b, major c
+			where a.d_id = b.d_id
+			and b.ma_no = c.ma_no
+			and a.del_yn = 'N'
+			order by dis_date desc
+		)
+		where rownum < 10
+		]]>
+	</select>
+
+	<select id="selectMajor" parameterType="string" resultType="caseVO">
+	<![CDATA[
+	select * from(
+		select
+			a.dis_no
+			, a.d_id
+			, a.dis_title
+			, a.dis_content
+			, to_char(a.dis_date, 'YYYY-MM-DD HH:MI:SS')as dis_date
+			, a.dis_cnt
+			, a.del_yn
+			, a.dis_d_name
+			, a.dis_sex
+			, a.dis_class
+			, c.ma_name
+			, b.d_name
+			, b.d_pic
+			,(select count(d.d_id) from dis_recom d where d.dis_no = a.dis_no) as recom
+            ,(select count(e.d_id) from dis_reply e where a.dis_no = e.dis_no) as reply
+		from
+			case_dis a, doctor b, major c
+			where a.d_id = b.d_id
+			and c.ma_no = b.ma_no
+			and a.del_yn = 'N'
+			and c.ma_name = #{maName}
+			order by a.dis_date desc)
+	where rownum < 7
+	]]>
+	</select>
+
+	<select id="recomSelect" parameterType="recomVO" resultType="recomVO">
+		select * from dis_recom where d_id = #{dId} and dis_no = #{disNo}
+	</select>
+	<update id="recomInsert" parameterType="recomVO">
+		insert into dis_recom(d_id, dis_no,
+	    r_date) values(#{dId}, #{disNo} ,sysdate)
+	</update>
+	<update id="recomDelete" parameterType="recomVO">
+		delete from dis_recom where d_id = #{dId} and dis_no = #{disNo}
+	</update>
+	<select id="mainTop" resultType="caseVO">
+	select
+		a.dis_no,
+		a.d_id,
+		a.dis_title,
+		a.dis_content,
+		to_char(a.dis_date, 'YYYY-MM-DD HH:MI:SS')as dis_date,
+		a.dis_cnt,
+		a.del_yn,
+		a.dis_d_name,
+		a.dis_sex,
+		a.dis_class,
+		c.ma_name,
+		b.d_name,
+		(select count(d.d_id) from dis_recom d where d.dis_no = a.dis_no) as recom,
+        (select count(e.d_id) from dis_reply e where a.dis_no = e.dis_no) as reply
+		from
+		case_dis a, doctor b, major c
+		where a.d_id = b.d_id
+        and a.del_yn = 'N'
+		and b.ma_no = c.ma_no
+        and dis_date >= TO_CHAR(SYSDATE-30,'YYYYMMDD')
+	</select>
+
+	<select id="selectFile" parameterType="string" resultType="fileVO">
+		select dis_file_no, dis_file_path, dis_no, dis_filename, dis_filetype from dis_file where dis_no = #{disNo}
+	</select>
+
+	<update id="updateFile" parameterType="caseVO">
+		insert into dis_file(dis_file_no, dis_file_path, dis_filename, dis_filetype, dis_no) values(#{disFileNo}, #{disFilePath}, #{disFileName}, #{disFileType}, #{disNo})
+	</update>
+
+	<select id="selectCaseFileSeqNextValue" resultType="int">
+		select
+		case_file_seq.nextVal from dual
+	</select>
+
+	<select id="getFile" parameterType="fileVO" resultType="String">
+		select dis_filename from dis_file where dis_no = #{disNo} and dis_file_no = #{disFileNo}
+	</select>
+
+	<update id="deleteFile" parameterType="string">
+		delete from dis_file where dis_filename = #{disFileName}
+	</update>
+
+	<update id="modifyFile" parameterType="CaseRegistCommand">
+		insert into dis_file(dis_file_no, dis_file_path, dis_filename, dis_filetype, dis_no) values(#{disFileNo}, #{disFilePath}, #{disFileName}, #{disFileType}, #{disNo})
+	</update>
+</mapper>
+
+

@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="Orderset-Mapper">
+
+  <sql id="search">
+		<if test="searchType == 'c'.toString()">
+			and a.o_cla like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 'd'.toString()">
+			and b.d_name like '%'||#{keyword}||'%'
+		</if>
+		<if test="searchType == 't'.toString()">
+			and (
+			a.o_dname like '%'||#{keyword}||'%'
+			or
+			a.o_title like '%'||#{keyword}||'%'
+			)
+		</if>
+		<if test="searchType == 'cdt'.toString()">
+			and (
+			a.o_cla like '%'||#{keyword}||'%'
+			or
+			b.d_name like '%'||#{keyword}||'%'
+			or
+			a.o_dname like '%'||#{keyword}||'%'
+			or
+			a.o_title like '%'||#{keyword}||'%'
+			)
+		</if>
+	</sql>
+
+  <select id="selectOrdersetList" resultType="ordersetVO" >
+		SELECT
+		    a.o_no
+		  , a.doc_id
+		  , b.d_name
+		  , b.d_pic
+		  , a.o_dname
+		  , a.o_viewcnt
+		  , a.o_cla
+		  , a.o_target
+		  , to_char(a.o_regdate,'YYYY-MM-DD')as o_regdate
+		  , a.o_caution
+		  , a.o_result
+		  , a.del_yn
+		  , a.o_title
+		  ,(  SELECT
+                    count(*)
+                FROM
+                    DRUG_RECOM c
+                WHERE
+                    c.o_no = a.o_no) as recoCnt
+		FROM
+		    drug_orderset a
+		  , doctor        b
+		WHERE
+	        b.d_id = a.doc_id
+    	AND a.del_yn = 'N'
+		<include refid="search"></include>
+		<if test="mineCheck == 'Y'.toString()">
+			and a.doc_id = #{dId}
+		</if>
+
+		<choose>
+		    <when test="selectFilter == 'd'.toString()">
+		    	order by a.o_regdate desc
+		    </when>
+		    <when test="selectFilter == 'v'.toString()">
+		   	 	order by a.o_viewcnt desc
+		    </when>
+		    <when test="selectFilter == 'r'.toString()">
+		    	order by recoCnt desc
+			</when>
+		    <otherwise>order by a.o_regdate desc</otherwise>
+		</choose>
+
+  </select>
+
+  <select id="selectDrugList" parameterType="string" resultType="ordersetVO">
+		SELECT
+		    o_drug
+		  , o_no
+		  , quantity
+		  , dg_aday
+		  , dg_days
+		FROM
+		    drugs
+		WHERE
+		    o_no = #{oNo}
+  </select>
+
+   <select id="selectOrdersetListCount" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			drug_orderset a
+		  , doctor        b
+		WHERE
+	        b.d_id = a.doc_id
+	    AND a.o_no IS NOT NULL
+		AND a.del_yn = 'N'
+		<include refid="search" />
+		order by a.o_regdate desc
+	</select>
+
+	<select id="selectRecommendCount" parameterType="string" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			DRUG_RECOM
+		WHERE
+		    o_no = #{oNo}
+	</select>
+    <update id="insertOrderset" parameterType="ordersetCommand">
+	    INSERT INTO drug_orderset (
+	        o_no
+	        , doc_id
+	        , o_dname
+	        , o_viewcnt
+	        , o_cla
+	        , o_target
+	        , o_regdate
+	        , o_caution
+	        , o_result
+	        , del_yn
+	        , o_title
+	        , o_noti
+	    ) VALUES (
+	        #{oNo}
+	      , #{docId}
+	      , #{oDname}
+	      , 0
+	      , #{oCla}
+	      , #{oTarget}
+	      , sysdate
+	      , #{oCaution}
+	      , #{oResult}
+	      , 'N'
+	      , #{oTitle}
+	      , #{oNoti}
+	    )
+    </update>
+    <update id="insertDrugs" parameterType="ordersetVO">
+    	  INSERT
+		    INTO drugs (
+		        o_drug
+		        , o_no
+		        , quantity
+		        , dg_aday
+		        , dg_days
+		    ) VALUES (
+		        #{oDrug}
+		      , #{oNo}
+		      , #{quantity}
+		      , #{dgAday}
+		      , #{dgDays}
+		    )
+    </update>
+    <select id="selectOrdersetSeqNext" resultType="string" >
+    	select 'O' || lpad(os_seq.NEXTVAL,3,'0') as o_no FROM dual
+    </select>
+
+    <select id="searchDrugList" parameterType="string" resultType="ordersetVO">
+	    <![CDATA[
+		    SELECT
+			    a.cure_name, a.p_quantity, a.p_aday, a.p_days
+			FROM
+			    (
+			        SELECT
+			            m_no
+			          , cure_name
+			          , p_quantity, p_aday, p_days
+			          , count(*)
+			        FROM
+			            prescript
+			        GROUP BY
+			            m_no
+			          , cure_name
+			          , p_quantity, p_aday, p_days
+			        ORDER BY
+			            2 DESC
+			    )         a
+			  , medi_reco b
+			WHERE
+			        a.m_no = b.m_no
+			    AND b.d_name = #{keyword}
+			    AND rownum <= 5
+		    ]]>
+
+    </select>
+
+	<select id="selectMyMajor" parameterType="string" resultType="string">
+		SELECT
+		    a.ma_name
+		   ,a.ma_no
+		FROM
+		    major a
+		   ,doctor b
+		WHERE
+		    a.ma_no = b.ma_no
+		  AND
+		  	b.d_id = #{dId}
+	</select>
+	<select id="selectOrdersetDetail" parameterType="string" resultType="ordersetVO">
+			SELECT
+			    a.o_no
+			  , b.d_name
+			  ,b.d_pic
+			  , a.doc_id
+			  , a.o_dname
+			  , a.o_viewcnt
+			  , a.o_cla
+			  , a.o_target
+			  , to_char(a.o_regdate,'YYYY-MM-DD')as o_regdate
+			  , a.o_caution
+			  , a.o_result
+			  , a.del_yn
+			  , a.o_title
+	          , A.o_noti
+			FROM
+			    drug_orderset a
+			  , doctor        b
+			WHERE
+		        b.d_id = a.doc_id
+	        AND A.o_no = #{oNo}
+	</select>
+
+	<update id="increaseViewCnt" parameterType="string">
+		update
+			drug_orderset
+		set
+			o_viewcnt=o_viewcnt+1
+		where o_no=#{o_no}
+	</update>
+
+	<select id="selectRelationOrderset" parameterType="ordersetVO" resultType="ordersetVO">
+		   <![CDATA[
+		SELECT DISTINCT
+		    a.o_no
+		  , c.d_name
+		  , c.d_pic
+		  , c.d_id
+		  , a.o_dname
+		  , a.o_viewcnt
+		  , a.o_cla
+		  , a.o_target
+		  , to_char(a.o_regdate, 'YYYY-MM-DD') AS o_regdate
+		  , a.o_caution
+		  , a.o_result
+		  , a.del_yn
+		  , a.o_title
+		FROM
+		    drugs         b
+		  , drug_orderset a
+		  , doctor        c
+		WHERE
+		        a.o_no = b.o_no
+		    AND a.doc_id = c.d_id
+		    AND a.o_dname = #{oDname}
+		    AND a.del_yn = 'N'
+		    AND EXISTS (
+		        SELECT
+		            1
+		        FROM
+		            (
+		                SELECT
+		                    b.o_drug
+		                FROM
+		                    drugs         b
+		                  , drug_orderset a
+		                WHERE
+		                        b.o_no = a.o_no
+		                    AND a.o_dname = #{oDname}
+		                    AND a.del_yn = 'N'
+		                INTERSECT
+		                SELECT
+		                    o_drug
+		                FROM
+		                    drugs
+		                WHERE
+		                    o_no = #{oNo}
+		            )
+		    )
+		    AND a.o_no NOT IN #{oNo}
+		    AND rownum <= 4
+	  ]]>
+	</select>
+	<update id="insertRecommand" parameterType="map" >
+		INSERT INTO DRUG_RECOM(o_no,d_id,r_date)
+ 		   VALUES (#{oNo},#{dId},sysdate)
+	</update>
+
+	<update id="deleteRecommand" parameterType="map">
+		   DELETE FROM DRUG_RECOM
+			WHERE O_NO = #{oNo}
+			  and d_id = #{dId}
+	</update>
+
+	<select id="selectMyRecommand" parameterType="map" resultType="string">
+			(SELECT  1
+			  FROM drug_recom d
+			 WHERE d.o_no = #{oNo}
+			   AND d.d_id = #{dId}
+             )
+              union all
+
+              select 0
+              from dual
+            where not exists
+            (SELECT  1
+			  FROM drug_recom c
+			 WHERE c.o_no = #{oNo}
+			   AND c.d_id = #{dId}
+             )
+	</select>
+
+	<select id="selectOrdersetReplyList" parameterType="string" resultType="ordersetVO">
+		SELECT
+		    a.fb_no
+		   ,a.o_no
+		   ,a.doc_id
+		   ,b.d_name
+		   ,b.d_pic
+		   ,b.d_id
+		   ,a.fb_result
+		   ,a.fb_regdate
+		   ,c.ma_name
+		FROM
+		    order_feed a
+		   ,doctor b
+		   ,major c
+		WHERE
+		    a.doc_id = b.d_id
+	       AND   b.ma_no = c.ma_no
+		   AND   o_no = #{oNo}
+	</select>
+
+	<update id="insertOrdersetFeedBack" parameterType="ordersetVO" >
+	      INSERT INTO order_feed (
+		        fb_no
+		       ,o_no
+		       ,doc_id
+		       ,fb_result
+		       ,fb_regdate
+		    ) VALUES (
+		        'OF' || lpad(osf_seq.NEXTVAL,3,'0')
+		       ,#{oNo}
+		       ,#{docId}
+		       ,#{fbResult}
+		       ,SYSDATE
+		    )
+	</update>
+
+	<update id="updateOrdersetFeedBack" parameterType="ordersetVO">
+
+		update
+			ORDER_FEED
+		set
+			fb_result=#{fbResult},
+			fb_regdate = sysdate
+		where
+            fb_no = #{fbNo}
+
+	</update>
+	<select id="getOrdersetFeedBack" parameterType="string" resultType="ordersetVO">
+		  SELECT
+			    fb_result
+			   ,fb_regdate
+			FROM
+			    order_feed
+			WHERE
+			    fb_no = #{fbNo}
+	</select>
+
+	<update id="deleteOrdersetFeedBack" parameterType="string">
+   		 delete from ORDER_FEED
+     	  where fb_no = #{fbNo}
+	</update>
+
+
+	<select id="getOrderSetShareSeq" resultType="int">
+	select ordersetshare_seq.nextval from dual
+	</select>
+	<update id="orderSetShare" parameterType="orderSetShareVO">
+		 INSERT INTO ordersetshare (
+		    os_no,
+		    o_no,
+
+
+		    d_id,
+		    do_id
+		) VALUES (
+		    #{osNo},
+		    #{oNo},
+		    #{dId},
+		    #{doId}
+		)
+	</update>
+
+	<update id="modifyOrderset" parameterType="ordersetVO">
+		update drug_orderset
+		   set  o_dname = #{oDname}, o_target=#{oTarget}, o_regdate= sysdate, o_caution =#{oCaution}, o_result=#{oResult}, o_title = #{oTitle}, o_noti = #{oNoti}
+		   where o_no = #{oNo}
+	</update>
+
+	<update id="deleteOrderset" parameterType="string">
+		update drug_orderset
+		   set  del_yn= 'Y'
+		   where o_no = #{oNo}
+	</update>
+
+	<update id="deleteOrdersetDrugs" parameterType="string">
+		 delete from drugs
+     	  where o_no = #{oNo}
+	</update>
+
+	<select id="selectMainRecoList1" parameterType="string" resultType="ordersetVO">
+		SELECT
+			    a.o_no
+			  , a.doc_id
+			  , b.d_name
+			  , b.d_pic
+			  , a.o_dname
+			  , a.o_viewcnt
+			  , a.o_cla
+			  , a.o_target
+			  , to_char(a.o_regdate,'YYYY-MM-DD')as o_regdate
+			  , a.o_caution
+			  , a.o_result
+			  , a.del_yn
+			  , a.o_title
+			  ,(  SELECT
+	                    count(*)
+	                FROM
+	                    DRUG_RECOM c
+	                WHERE
+	                    c.o_no = a.o_no) as recoCnt
+			FROM
+			    drug_orderset a
+			  , doctor        b
+			WHERE
+		        b.d_id = a.doc_id
+		    AND a.o_no IS NOT NULL
+	    	AND a.del_yn = 'N'
+	    	and a.o_cla = #{maName}
+			order by recoCnt desc
+	</select>
+	<select id="selectMainRecoList2" parameterType="string" resultType="ordersetVO">
+		SELECT
+			    a.o_no
+			  , a.doc_id
+			  , b.d_name
+			  , b.d_pic
+			  , a.o_dname
+			  , a.o_viewcnt
+			  , a.o_cla
+			  , a.o_target
+			  , to_char(a.o_regdate,'YYYY-MM-DD')as o_regdate
+			  , a.o_caution
+			  , a.o_result
+			  , a.del_yn
+			  , a.o_title
+			  ,(  SELECT
+	                    count(*)
+	                FROM
+	                    DRUG_RECOM c
+	                WHERE
+	                    c.o_no = a.o_no) as recoCnt
+			FROM
+			    drug_orderset a
+			  , doctor        b
+			WHERE
+		        b.d_id = a.doc_id
+		    AND a.o_no IS NOT NULL
+	    	AND a.del_yn = 'N'
+	    	and a.o_cla = #{maName}
+			order by a.o_regdate desc
+	</select>
+	<select id="selectFeedbackMainList" parameterType="string" resultType="ordersetVO">
+
+	      select  b.doc_id ,b.o_title, b.o_no, c.d_name , c.d_id,c.d_pic, d.ma_name,a.fb_no, a.FB_RESULT, a.FB_REGDATE
+	        from ORDER_FEED a ,DRUG_ORDERSET b , DOCTOR c, MAJOR d
+	       where a.o_no = b.o_no
+	         and a.doc_id = c.d_id
+	         and c.ma_no = d.ma_no
+	         and b.doc_id = #{dId}
+	         and b.del_yn = 'N'
+
+	</select>
+
+  <select id="selectMainReplyCount" parameterType="string" resultType="int">
+   			select count(*)
+   		 from order_feed a ,drug_orderset b , doctor c, major d
+	       where a.o_no = b.o_no
+	         and a.doc_id = c.d_id
+	         and c.ma_no = d.ma_no
+	         and b.doc_id = #{dId}
+	         and b.del_yn = 'N'
+   </select>
+
+	<select id="selectShareOrderset" parameterType="string" resultType="ordersetVO">
+		SELECT
+		    a.os_no
+		  , a.o_no
+		  , a.d_id
+		  , (select d_name from doctor where d_id = b.doc_id) as doc_id
+		  , b.o_cla
+		  , to_char(b.o_regdate,'YYYY-MM-DD')as o_regdate
+		  , b.o_viewcnt
+		  , b.o_target
+		  , a.do_id
+		  , a.os_regdate
+		  , b.o_title
+		  , c.d_name
+		  , c.d_id
+		  , c.d_pic
+		  , d.ma_name
+		FROM
+		    ordersetshare a
+		  , drug_orderset b
+		  , DOCTOR c, MAJOR d
+
+		WHERE
+		        a.o_no = b.o_no
+		    and a.d_id=c.d_id
+		    and c.ma_no = d.ma_no
+		    and b.del_yn = 'N'
+		    AND do_id = #{dId}
+	</select>
+
+   <select id="selectMainShareCount" parameterType="string" resultType="int">
+   		select count(*)
+   		FROM
+		    ordersetshare a
+		  , drug_orderset b
+		  , DOCTOR c, MAJOR d
+
+		WHERE
+		        a.o_no = b.o_no
+		    and a.d_id=c.d_id
+		    and c.ma_no = d.ma_no
+		    and b.del_yn = 'N'
+		    AND do_id = #{dId}
+   </select>
+
+
+
+   <select id="selectMedicine" parameterType="string" resultType="string">
+   	  select me_name
+	    from medicine
+	   where me_name = #{meName}
+   </select>
+
+   <select id="selectReplyCount" parameterType="string" resultType="int">
+   		select count(*) from order_feed where o_no = #{oNo}
+   </select>
+
+  </mapper>

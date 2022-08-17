@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Manager-Mapper">
+
+<sql id="userChoice">
+	<if test = "userChoice == 'a'.toString()">
+
+	</if>
+	<if test="userChoice == 'n'.toString()">
+		and d_name like '%'||#{keyword}||'%'
+	</if>
+	<if test="userChoice == 'm'.toString()">
+		and b.ma_name like '%'||#{keyword}||'%'
+	</if>
+</sql>
+
+
+<select id="doctorListForPage" resultType="doctorListVO" parameterType="string">
+select * from(
+select
+    a.d_id
+  , a.ma_no
+  , a.d_name
+  , a.tel
+  , a.status
+  , a.regdate
+  , a.resident_num
+  , a.account_status
+  , a.retiredate
+  , a.sus_startdate
+  , a.sus_enddate
+  , b.ma_name
+  , c.indate
+from
+    doctor a, major b, login_log c
+where a.ma_no = b.ma_no
+  and a.d_id = c.d_id(+)
+  and a.d_id = #{dId}
+order by c.indate desc)
+where rownum = 1
+
+</select>
+<select id="insertDid" resultType="doctorListVO">
+select
+	d_id
+from doctor
+</select>
+<select id="doctorListCount" resultType="int">
+	select
+		count(*)
+	from
+		doctor a, major b
+	where a.ma_no = b.ma_no
+	<include refid="userChoice"></include>
+</select>
+
+<select id="doctorStatus" resultType="doctorListVO" parameterType="string">
+   select
+    a.d_id
+  , a.ma_no
+  , a.d_name
+  , a.tel
+  , a.status
+  , a.regdate
+  , a.resident_num
+  , a.account_status
+  , a.retiredate
+  , a.sus_startdate
+  , a.sus_enddate
+  , a.d_office
+  , a.d_exam
+  ,(select b.ma_name from major b where a.ma_no = b.ma_no) as maName
+from
+    doctor a
+where a.d_id = #{dId}
+</select>
+
+
+
+<update id="susDoctor" parameterType="doctorListVO">
+	update
+		doctor
+	set
+		account_status = '2',
+		sus_startdate = #{susStartDate},
+		sus_enddate = #{susEndDate}
+	where d_id = #{dId}
+</update>
+
+<update id="workDoctor" parameterType="string">
+	update
+		doctor
+	set
+		account_status = '1'
+	where d_id = #{dId}
+</update>
+
+<update id="retireDoctor" parameterType="doctorListVO">
+	update
+		doctor
+	set
+		account_status = '3',
+		retiredate = #{retireDate}
+	where d_id = #{dId}
+</update>
+
+<select id="ipListForPage" resultType="doctorListVO" parameterType="str">
+select * from(
+select
+    c.ipaddress
+    ,c.d_id
+    ,b.d_name
+    ,b.tel
+    ,b.d_office
+    ,b.d_exam
+    ,c.indate
+from login_log c, doctor b, ip_doc d
+where c.d_id = b.d_id
+and d.ip_no = c.ipaddress
+and c.ipaddress = #{ipNo}
+and c.d_id is not null
+order by c.indate desc)
+where rownum = 1
+</select>
+
+<select id="insertIpNo" resultType="doctorListVO">
+select
+ip_no
+from ip_doc
+</select>
+
+<select id="ipListForCount" resultType="int">
+	select count(*) from ip_doc
+</select>
+
+<update id="ipInsert" parameterType="doctorListVO">
+	insert into ip_doc
+	(ip_no, d_id) values(#{ipNo}, #{dId})
+</update>
+
+<select id="memberIp" parameterType="string" resultType="doctorListVO">
+	select ip_no, d_id from ip_doc where d_id = #{dId}
+</select>
+
+<update id="deleteIp" parameterType="string">
+	delete from ip_doc where d_id = #{dId}
+</update>
+
+
+<select id="mainMemberList" resultType="doctorListVO">
+	select
+    a.d_id
+  , a.ma_no
+  , a.d_name
+  , a.pwd
+  , a.tel
+  , a.email
+  , a.status
+  , a.d_pic
+  , a.regdate
+  , a.account_status
+  , a.resident_num
+  , a.retiredate
+  , a.sus_startdate
+  , a.sus_enddate
+  , a.otp_qr
+  , a.otp_co
+  , a.d_office
+  , a.d_exam
+  , a.authority
+  , a.enabled
+  from doctor a
+  where not exists (select d_id from ip_doc b where a.d_id = b.d_id)
+</select>
+
+<select id="retireCountForChart" resultType="doctorListVO">
+select
+	retiredate, d_id
+from
+	doctor
+where account_status = 3
+</select>
+
+<select id="memberCountForChart" resultType="doctorListVO">
+select
+	regdate, d_id
+from
+	doctor
+where account_status = 1
+</select>
+
+<select id="ipDetail" parameterType="string" resultType="doctorListVO">
+select
+   a.ip_room,
+    (case when a.ip_no in
+    (select ip_no from ip_doc) then '사용불가' else '사용가능'end)as use,
+    b.d_name,
+    b.account_status,
+    b.d_office,
+    b.d_exam,
+    b.retiredate,
+    b.sus_startdate,
+    b.sus_enddate
+from
+	hospital_ip a, doctor b, ip_doc c
+where c.d_id = b.d_id(+)
+  and a.ip_no = c.ip_no(+)
+  and a.ip_no = #{ipNo}
+</select>
+
+<select id="dormantAccount" parameterType="str" resultType="doctorListVO">
+<![CDATA[
+select * from(
+select * from
+(select
+    a.d_id, a.indate, b.d_name
+from
+    login_log a, doctor b
+where
+    a.d_id = b.d_id
+and a.d_id = #{d_id}
+order by a.indate desc)
+where rownum = 1)
+where indate < (sysdate - 90)
+]]>
+</select>
+
+<select id="dorInsertId" resultType="str">
+select d_id from doctor
+</select>
+
+<select id="overlapIp" parameterType="doctorListVO" resultType="int">
+select
+	count(ip_no)
+from
+	ip_doc
+where
+	#{ipNo}
+in
+(select
+	ip_no
+from
+	ip_doc
+where
+	d_id != #{dId})
+</select>
+
+<select id="overIp" parameterType="string" resultType="doctorListVO">
+select
+	ip_no,
+	d_id
+from
+	ip_doc
+where
+ d_id != #{dId}
+</select>
+
+<update id="ipManagerDeleteIp" parameterType="doctorListVO">
+delete
+from
+	ip_doc
+where
+	ip_no = #{ipNo}
+and
+	d_id = #{dId}
+</update>
+
+<select id="selectUpdateMedicine" resultType="medicineVO">
+select
+     me_name
+    , me_no
+    , me_company
+    , me_code
+    , me_permitdate
+    , me_modidate
+    , me_limit
+    , exist_yn
+    , me_useage
+    , me_inserance
+    ,to_char(update_date,'YYYY-MM-DD') as update_date
+from 
+    medicine
+where 
+    update_date = (select max(update_date) from medicine)
+</select>
+</mapper>
