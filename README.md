@@ -19,7 +19,7 @@
 ![화면 캡처 2022-08-17 163826](https://user-images.githubusercontent.com/99178649/185064063-459fe4ad-1b7b-4429-82fc-eae4f29e5e0e.png)
 
 #### 오더세트
-![화면 캡처 2022-08-17 163853](https://user-images.githubusercontent.com/99178649/185064098-0010312e-8544-4c54-ba7c-88e5ce5ef27d.png
+![화면 캡처 2022-08-17 163853](https://user-images.githubusercontent.com/99178649/185064098-0010312e-8544-4c54-ba7c-88e5ce5ef27d.png)
 
 #### Case Discussion
 ![화면 캡처 2022-08-17 163913](https://user-images.githubusercontent.com/99178649/185064145-3f7d9c04-d9bc-4091-ac71-db92da98b914.png)
